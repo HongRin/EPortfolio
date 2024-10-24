@@ -45,9 +45,9 @@ private:
 
 private:
 	UPROPERTY(meta = (BindWidget))
-	class UButton* HostButton;
+	TObjectPtr<class UButton> HostButton;
 	UPROPERTY(meta = (BindWidget))
-	UButton* JoinButton;
+	TObjectPtr<class UButton> JoinButton;
 
 private :
 	class UEMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
