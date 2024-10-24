@@ -23,7 +23,7 @@ void UEMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, F
 		return;
 	}
 
-	auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
+	FNamedOnlineSession* ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
 	if (ExistingSession != nullptr)
 	{
 		bCreateSessionOnDestroy = true;
@@ -36,15 +36,17 @@ void UEMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, F
 	CreateSessionCompleteDelegateHandle = SessionInterface->AddOnCreateSessionCompleteDelegate_Handle(CreateSessionCompleteDelegate);
 
 	LastSessionSettings = MakeShareable(new FOnlineSessionSettings());
-	LastSessionSettings->bIsLANMatch = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false;
-	LastSessionSettings->NumPublicConnections = NumPublicConnections;
-	LastSessionSettings->bAllowJoinInProgress = true;
-	LastSessionSettings->bAllowJoinViaPresence = true;
-	LastSessionSettings->bShouldAdvertise = true;
-	LastSessionSettings->bUsesPresence = true;
-	LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
-	LastSessionSettings->BuildUniqueId = 1;
-	LastSessionSettings->bUseLobbiesIfAvailable = true;
+	{
+		LastSessionSettings->bIsLANMatch            = IOnlineSubsystem::Get()->GetSubsystemName() == "NULL" ? true : false;
+		LastSessionSettings->NumPublicConnections   = NumPublicConnections;
+		LastSessionSettings->bAllowJoinInProgress   = true;
+		LastSessionSettings->bAllowJoinViaPresence  = true;
+		LastSessionSettings->bShouldAdvertise       = true;
+		LastSessionSettings->bUsesPresence          = true;
+		LastSessionSettings->bUseLobbiesIfAvailable = true;
+		LastSessionSettings->BuildUniqueId          = 1;
+		LastSessionSettings->Set(FName("MatchType"), MatchType, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	}
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
 	if (!SessionInterface->CreateSession(*LocalPlayer->GetPreferredUniqueNetId(), NAME_GameSession, *LastSessionSettings))
@@ -122,8 +124,7 @@ bool UEMultiplayerSessionsSubsystem::IsValidSessionInterface()
 {
 	if (!SessionInterface)
 	{
-		IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
-		if (Subsystem)
+		if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
 		{
 			SessionInterface = Subsystem->GetSessionInterface();
 		}

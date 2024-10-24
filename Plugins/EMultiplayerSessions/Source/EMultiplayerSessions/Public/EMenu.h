@@ -20,8 +20,9 @@ protected:
 	virtual void NativeDestruct() override;
 
 public:
+public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup();
+	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/Levels/Lobby")));
 
 protected :
 	UFUNCTION()
@@ -53,7 +54,5 @@ private :
 
 	int32 NumPublicConnections{ 4 };
 	FString MatchType{ TEXT("FreeForAll") };
-public :
-	UPROPERTY(EditAnywhere)
 	FString PathToLobby{ TEXT("") };
 };

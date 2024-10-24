@@ -13,6 +13,7 @@ bool UEMenu::Initialize()
 	{
 		return false;
 	}
+
 	if (HostButton)
 	{
 		HostButton->OnClicked.AddDynamic(this, &ThisClass::HostButtonClicked);
@@ -21,6 +22,7 @@ bool UEMenu::Initialize()
 	{
 		JoinButton->OnClicked.AddDynamic(this, &ThisClass::JoinButtonClicked);
 	}
+
 	return true;
 }
 
@@ -30,38 +32,47 @@ void UEMenu::NativeDestruct()
 	Super::NativeDestruct();
 }
 
-void UEMenu::MenuSetup()
+void UEMenu::MenuSetup(int32 NumberOfPublicConnections, FString TypeOfMatch, FString LobbyPath)
 {
-	AddToViewport();
-	SetVisibility(ESlateVisibility::Visible);
-	bIsFocusable = true;
-	UWorld* World = GetWorld();
-	if (World)
 	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
+		PathToLobby = FString::Printf(TEXT("%s?listen"), *LobbyPath);
+		NumPublicConnections = NumberOfPublicConnections;
+		MatchType = TypeOfMatch;
+	}
+
+	{
+		AddToViewport();
+		SetVisibility(ESlateVisibility::Visible);
+		bIsFocusable = true;
+
+		if (UWorld* World = GetWorld())
 		{
-			FInputModeUIOnly InputModeData;
-			InputModeData.SetWidgetToFocus(TakeWidget());
-			InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-			PlayerController->SetInputMode(InputModeData);
-			PlayerController->SetShowMouseCursor(true);
+			APlayerController* PlayerController = World->GetFirstPlayerController();
+			if (PlayerController)
+			{
+				FInputModeUIOnly InputModeData;
+				InputModeData.SetWidgetToFocus(TakeWidget());
+				InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+				PlayerController->SetInputMode(InputModeData);
+				PlayerController->SetShowMouseCursor(true);
+			}
 		}
 	}
 
-	UGameInstance* GameInstance = GetGameInstance();
-	if (GameInstance)
 	{
-		MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UEMultiplayerSessionsSubsystem>();
-	}
+		if (UGameInstance* GameInstance = GetGameInstance())
+		{
+			MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UEMultiplayerSessionsSubsystem>();
+		}
 
-	if (MultiplayerSessionsSubsystem)
-	{
-		MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &ThisClass::OnCreateSession);
-		MultiplayerSessionsSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &ThisClass::OnFindSessions);
-		MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSession);
-		MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
-		MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
+		if (MultiplayerSessionsSubsystem)
+		{
+			MultiplayerSessionsSubsystem->MultiplayerOnCreateSessionComplete.AddDynamic(this, &ThisClass::OnCreateSession);
+			MultiplayerSessionsSubsystem->MultiplayerOnFindSessionsComplete.AddUObject(this, &ThisClass::OnFindSessions);
+			MultiplayerSessionsSubsystem->MultiplayerOnJoinSessionComplete.AddUObject(this, &ThisClass::OnJoinSession);
+			MultiplayerSessionsSubsystem->MultiplayerOnDestroySessionComplete.AddDynamic(this, &ThisClass::OnDestroySession);
+			MultiplayerSessionsSubsystem->MultiplayerOnStartSessionComplete.AddDynamic(this, &ThisClass::OnStartSession);
+		}
 	}
 }
 
@@ -69,8 +80,7 @@ void UEMenu::OnCreateSession(bool bWasSuccessful)
 {
 	if (bWasSuccessful)
 	{
-		UWorld* World = GetWorld();
-		if (World)
+		if (UWorld* World = GetWorld())
 		{
 			World->ServerTravel(PathToLobby);
 		}
@@ -79,12 +89,7 @@ void UEMenu::OnCreateSession(bool bWasSuccessful)
 	{
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				15.f,
-				FColor::Red,
-				FString(TEXT("Failed to create session!"))
-			);
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Failed to create session!")));
 		}
 		HostButton->SetIsEnabled(true);
 	}
@@ -97,7 +102,7 @@ void UEMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionRes
 		return;
 	}
 
-	for (auto Result : SessionResults)
+	for (const FOnlineSessionSearchResult & Result : SessionResults) /*Changed : for (auto Result : SessionResults) */
 	{
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);
@@ -115,8 +120,7 @@ void UEMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionRes
 
 void UEMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 {
-	IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get();
-	if (Subsystem)
+	if (IOnlineSubsystem* Subsystem = IOnlineSubsystem::Get())
 	{
 		IOnlineSessionPtr SessionInterface = Subsystem->GetSessionInterface();
 		if (SessionInterface.IsValid())
@@ -124,8 +128,7 @@ void UEMenu::OnJoinSession(EOnJoinSessionCompleteResult::Type Result)
 			FString Address;
 			SessionInterface->GetResolvedConnectString(NAME_GameSession, Address);
 
-			APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController();
-			if (PlayerController)
+			if (APlayerController* PlayerController = GetGameInstance()->GetFirstLocalPlayerController())
 			{
 				PlayerController->ClientTravel(Address, ETravelType::TRAVEL_Absolute);
 			}
@@ -162,11 +165,9 @@ void UEMenu::JoinButtonClicked()
 void UEMenu::MenuTearDown()
 {
 	RemoveFromParent();
-	UWorld* World = GetWorld();
-	if (World)
+	if (UWorld* World = GetWorld())
 	{
-		APlayerController* PlayerController = World->GetFirstPlayerController();
-		if (PlayerController)
+		if (APlayerController* PlayerController = World->GetFirstPlayerController())
 		{
 			FInputModeGameOnly InputModeData;
 			PlayerController->SetInputMode(InputModeData);
