@@ -17,6 +17,7 @@ public :
 public :
 	virtual void BeginPlay() override;
 	virtual void Tick(float InDeltaTime) override;
+	virtual void OnRep_PlayerState() override;
 
 protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;

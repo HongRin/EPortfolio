@@ -41,7 +41,6 @@ AEPlayer::AEPlayer()
 void AEPlayer::BeginPlay()
 {
 	Super::BeginPlay();
-	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
 
 	check(IMCPlayer);
 
@@ -54,12 +53,22 @@ void AEPlayer::BeginPlay()
 			Subsystem->AddMappingContext(IMCPlayer, 0);
 		}
 	}
+
+	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
 }
 
 void AEPlayer::Tick(float InDeltaTime)
 {
 	Super::Tick(InDeltaTime);
 }
+
+void AEPlayer::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
+}
+
 
 void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
