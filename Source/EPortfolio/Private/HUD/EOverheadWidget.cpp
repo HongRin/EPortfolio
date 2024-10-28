@@ -21,6 +21,10 @@ void UEOverheadWidget::SetDisplayText(FString TextToDisplay)
 
 void UEOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
+	checkf(InPawn, TEXT("InPawn is not valid"));
+	checkf(InPawn->GetPlayerState(), TEXT("GetPlayerState is not valid"));
+	checkf(*InPawn->GetPlayerState()->GetPlayerName(), TEXT("GetPlayerName is not valid"));
+
 	FString PlayerName = InPawn->GetPlayerState()->GetPlayerName();
 	
 	SetDisplayText(PlayerName);
