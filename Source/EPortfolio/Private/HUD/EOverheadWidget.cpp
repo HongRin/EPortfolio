@@ -21,7 +21,7 @@ void UEOverheadWidget::SetDisplayText(FString TextToDisplay)
 
 void UEOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
-	// FString PlayerName = InPawn->GetPlayerState()->GetPlayerName();
+	FString PlayerName = InPawn->GetPlayerState()->GetPlayerName();
 	
-	//SetDisplayText(PlayerName);
+	SetDisplayText(PlayerName);
 }
