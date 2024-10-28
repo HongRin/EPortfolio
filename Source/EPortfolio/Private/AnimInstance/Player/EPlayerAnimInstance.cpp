@@ -15,8 +15,8 @@ void UEPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	if (OwnerCharacter)
 	{
-		UEPlayerStateComponent* PlayerState = Cast<AEPlayer>(OwnerCharacter)->GetPlayerState();
-		bIsJumpping = PlayerState->IsJumpping();
+		UEPlayerStateComponent* StateComponent = Cast<AEPlayer>(OwnerCharacter)->GetStateComponent();
+		bIsJumpping = StateComponent->IsJumpping();
 	}
 
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);

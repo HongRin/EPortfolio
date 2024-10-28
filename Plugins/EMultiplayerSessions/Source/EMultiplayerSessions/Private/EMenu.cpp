@@ -102,7 +102,7 @@ void UEMenu::OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionRes
 		return;
 	}
 
-	for (const FOnlineSessionSearchResult & Result : SessionResults) /*Changed : for (auto Result : SessionResults) */
+	for (const FOnlineSessionSearchResult & Result : SessionResults)
 	{
 		FString SettingsValue;
 		Result.Session.SessionSettings.Get(FName("MatchType"), SettingsValue);

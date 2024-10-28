@@ -41,16 +41,16 @@ protected:
 	void OnStartSessionComplete  (FName SessionName, bool bWasSuccessful);
 
 public :
-	FMultiplayerOnCreateSessionComplete MultiplayerOnCreateSessionComplete;
-	FMultiplayerOnFindSessionsComplete MultiplayerOnFindSessionsComplete;
-	FMultiplayerOnJoinSessionComplete MultiplayerOnJoinSessionComplete;
+	FMultiplayerOnCreateSessionComplete  MultiplayerOnCreateSessionComplete;
+	FMultiplayerOnFindSessionsComplete   MultiplayerOnFindSessionsComplete;
+	FMultiplayerOnJoinSessionComplete    MultiplayerOnJoinSessionComplete;
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
-	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
+	FMultiplayerOnStartSessionComplete   MultiplayerOnStartSessionComplete;
 
 private:
 	IOnlineSessionPtr SessionInterface;
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
-	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
+	TSharedPtr<FOnlineSessionSearch>   LastSessionSearch;
 
 private:
 	FOnCreateSessionCompleteDelegate  CreateSessionCompleteDelegate;

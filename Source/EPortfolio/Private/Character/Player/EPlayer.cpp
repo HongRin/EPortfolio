@@ -5,6 +5,11 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Component/Player/EPlayerStateComponent.h"
+#include "Components/WidgetComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+#include "InputMappingContext.h"
+#include "HUD/EOverheadWidget.h"
 
 AEPlayer::AEPlayer()
 {
@@ -24,53 +29,88 @@ AEPlayer::AEPlayer()
 	}
 
 	{
-		PlayerState = CreateDefaultSubobject<UEPlayerStateComponent>(TEXT("PlayerState"));
+		StateComponent = CreateDefaultSubobject<UEPlayerStateComponent>(TEXT("StateComponent"));
+	}
+
+	{
+		OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
+		OverheadWidget->SetupAttachment(RootComponent);
 	}
 }
 
-void AEPlayer::Move(const FVector2D& InMovementVector, const FRotator& InMovementRotation)
+void AEPlayer::BeginPlay()
 {
-	if (!PlayerState->IsCanMove())
+	Super::BeginPlay();
+	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
+
+	check(IMCPlayer);
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
-		return;
-	}
+		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
 
-	if (InMovementVector.Y != 0.f)
-	{
-		const FVector ForwardDirection = InMovementRotation.RotateVector(FVector::ForwardVector);
-
-		AddMovementInput(ForwardDirection, InMovementVector.Y);
-	}
-
-	if (InMovementVector.X != 0.f)
-	{
-		const FVector RightDirection = InMovementRotation.RotateVector(FVector::RightVector);
-
-		AddMovementInput(RightDirection, InMovementVector.X);
+		checkf(Subsystem, TEXT("SubSystem is Null ! "));
+		{
+			Subsystem->AddMappingContext(IMCPlayer, 0);
+		}
 	}
 }
 
-void AEPlayer::Look(const double& InX, const double& InY)
+void AEPlayer::Tick(float InDeltaTime)
 {
-	if (InX != 0.f)
-	{
-		AddControllerYawInput(InX);
-	}
-
-	if (InY != 0.f)
-	{
-		AddControllerPitchInput(InY);
-	}
+	Super::Tick(InDeltaTime);
 }
 
-void AEPlayer::Jump()
+void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	PlayerState->SetJump();
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
+
+		EnhancedInputComponent->BindAction(IAJump, ETriggerEvent::Started  , this, &ThisClass::JumpAction);
+		EnhancedInputComponent->BindAction(IAMove, ETriggerEvent::Triggered, this, &ThisClass::MoveAction);
+		EnhancedInputComponent->BindAction(IALook, ETriggerEvent::Triggered, this, &ThisClass::LookAction);
+	}
 }
 
 void AEPlayer::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
+}
+
+void AEPlayer::MoveAction(const FInputActionValue& InputActionValue)
+{
+	FVector2D MovementVector = InputActionValue.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		const FRotator Rotation = Controller->GetControlRotation();
+		const FRotator YawRotation(0, Rotation.Yaw, 0);
+
+		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+
+		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+
+		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(RightDirection, MovementVector.X);
+	}
+}
+
+void AEPlayer::LookAction(const FInputActionValue& InputActionValue)
+{
+	FVector2D LookAxisVector = InputActionValue.Get<FVector2D>();
+
+	if (Controller != nullptr)
+	{
+		AddControllerYawInput(LookAxisVector.X);
+		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void AEPlayer::JumpAction(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		StateComponent->SetJump();
+	}
 }
 
 
