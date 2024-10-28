@@ -5,6 +5,9 @@
 #include "Components/TextBlock.h"
 #include "GameFramework/PlayerState.h"
 
+#include "Engine/LocalPlayer.h"
+#include "GameFramework/PlayerController.h"
+
 void UEOverheadWidget::NativeDestruct()
 {
 	RemoveFromParent();
@@ -21,11 +24,11 @@ void UEOverheadWidget::SetDisplayText(FString TextToDisplay)
 
 void UEOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
-	checkf(InPawn, TEXT("InPawn is not valid"));
-	checkf(InPawn->GetPlayerState(), TEXT("GetPlayerState is not valid"));
-	checkf(*InPawn->GetPlayerState()->GetPlayerName(), TEXT("GetPlayerName is not valid"));
-
-	FString PlayerName = InPawn->GetPlayerState()->GetPlayerName();
+	if (const APlayerState* PlayerState = InPawn->GetPlayerState())
+	{
+		SetDisplayText(PlayerState->GetPlayerName());
+		return;
+	}
 	
-	SetDisplayText(PlayerName);
+	SetDisplayText("NULL");
 }
