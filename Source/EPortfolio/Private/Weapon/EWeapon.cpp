@@ -18,6 +18,9 @@ AEWeapon::AEWeapon()
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		// WeaponMesh->SetCollisionProfileName(FName("PhysicsActor"));
+		// WeaponMesh->SetMobility(EComponentMobility::Movable);
+		// WeaponMesh->SetSimulatePhysics(true);
 	}
 
 	{
@@ -41,7 +44,8 @@ void AEWeapon::BeginPlay()
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereOverlap);
+		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnBeginOverlap);
+		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnEndOverlap);
 	}
 
 	if (PickupWidget)
@@ -57,13 +61,32 @@ void AEWeapon::Tick(float DeltaTime)
 
 }
 
-void AEWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AEWeapon::ShowPickupWidget(bool bShowWidget)
 {
-	AEPlayer* Player = Cast<AEPlayer>(OtherActor);
-
-	if (Player && PickupWidget)
+	if (PickupWidget)
 	{
-		PickupWidget->SetVisibility(true);
+		PickupWidget->SetVisibility(bShowWidget);
 	}
 }
+
+void AEWeapon::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AEPlayer* Player = Cast<AEPlayer>(OtherActor);
+	
+	if (Player)
+	{
+		Player->SetOverlappingWeapon(this);
+	}
+}
+
+void AEWeapon::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	AEPlayer* Player = Cast<AEPlayer>(OtherActor);
+	if (Player)
+	{
+		Player->SetOverlappingWeapon(nullptr);
+	}
+}
+
+
 

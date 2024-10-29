@@ -5,30 +5,27 @@
 #include "Components/TextBlock.h"
 #include "GameFramework/PlayerState.h"
 
-#include "Engine/LocalPlayer.h"
-#include "GameFramework/PlayerController.h"
-
 void UEOverheadWidget::NativeDestruct()
 {
 	RemoveFromParent();
 	Super::NativeDestruct();
 }
 
-void UEOverheadWidget::SetDisplayText(FString TextToDisplay)
-{
-	if (DisplayText)
-	{
-		DisplayText->SetText(FText::FromString(TextToDisplay));
-	}
-}
-
 void UEOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
-	if (const APlayerState* PlayerState = InPawn->GetPlayerState())
-	{
-		SetDisplayText(PlayerState->GetPlayerName());
-		return;
-	}
-	
-	SetDisplayText("NULL");
+	GetWorld()->GetTimerManager().SetTimer(CheckPlayerStateTimerHandle,
+		[InPawn, this]()
+		{
+			if (const APlayerState* PlayerState = InPawn->GetPlayerState())
+			{
+				DisplayText->SetText(FText::FromString(PlayerState->GetPlayerName()));
+				GetWorld()->GetTimerManager().ClearTimer(CheckPlayerStateTimerHandle);
+			}
+			else
+			{
+				DisplayText->SetText(FText::FromString("NULL"));
+			}
+		},
+		0.1f, true
+	);
 }

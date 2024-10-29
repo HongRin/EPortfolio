@@ -4,12 +4,19 @@
 #include "Character/Player/EPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "Component/Player/EPlayerStateComponent.h"
+
 #include "Components/WidgetComponent.h"
+
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "InputMappingContext.h"
+
+#include "Net/UnrealNetwork.h"
+
 #include "HUD/EOverheadWidget.h"
+#include "Weapon/EWeapon.h"
+#include "Component/Player/EPlayerStateComponent.h"
+
 
 AEPlayer::AEPlayer()
 {
@@ -65,8 +72,6 @@ void AEPlayer::Tick(float InDeltaTime)
 void AEPlayer::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
-
-	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
 }
 
 
@@ -80,9 +85,43 @@ void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	}
 }
 
+void AEPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME_CONDITION(AEPlayer, OverlappingWeapon, COND_OwnerOnly);
+}
+
 void AEPlayer::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
+}
+
+void AEPlayer::OnRep_OverlappingWeapon(AEWeapon* LastWeapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
+	}
+}
+
+void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
+{
+	if (OverlappingWeapon)
+	{
+		OverlappingWeapon->ShowPickupWidget(false);
+	}
+	OverlappingWeapon = Weapon;
+	if (IsLocallyControlled())
+	{
+		if (OverlappingWeapon)
+		{
+			OverlappingWeapon->ShowPickupWidget(true);
+		}
+	}
 }
 
 void AEPlayer::MoveAction(const FInputActionValue& InputActionValue)
