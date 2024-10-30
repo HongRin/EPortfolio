@@ -20,6 +20,7 @@ protected:
 	virtual void OnRep_PlayerState() override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 
 public :
 	virtual void Landed(const FHitResult& Hit) override;
@@ -28,6 +29,10 @@ public :
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(class AEWeapon* LastWeapon);
 
+private :
+	UFUNCTION(Server, Reliable)
+	void ServerEquip();
+
 public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
 
@@ -35,6 +40,7 @@ private:
 	void MoveAction(const struct FInputActionValue& InputActionValue);
 	void LookAction(const struct FInputActionValue& InputActionValue);
 	void JumpAction(const struct FInputActionValue& InputActionValue);
+	void EquipAction(const struct FInputActionValue& InputActionValue);
 
 public :
 	FORCEINLINE class UEPlayerStateComponent* GetStateComponent() { return StateComponent; }
@@ -53,7 +59,11 @@ private :
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UWidgetComponent> OverheadWidget;
 
+	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UEPlayerStateComponent> StateComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UECombatComponent> CombatComponent;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
@@ -67,4 +77,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<class UInputAction> IAJump;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<class UInputAction> IAEquip;
 };

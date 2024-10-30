@@ -5,6 +5,7 @@
 #include "Character/Player/EPlayer.h"
 #include "Components/WidgetComponent.h"
 #include "Components/SphereComponent.h"
+#include "Net/UnrealNetwork.h"
 
 AEWeapon::AEWeapon()
 {
@@ -61,11 +62,30 @@ void AEWeapon::Tick(float DeltaTime)
 
 }
 
+void AEWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AEWeapon, WeaponState);
+}
+
 void AEWeapon::ShowPickupWidget(bool bShowWidget)
 {
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(bShowWidget);
+	}
+}
+
+void AEWeapon::SetWeaponState(EWeaponState State)
+{
+	WeaponState = State;
+	switch (WeaponState)
+	{
+	case EWeaponState::WS_Equipped:
+		ShowPickupWidget(false);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		break;
 	}
 }
 
@@ -85,6 +105,16 @@ void AEWeapon::OnEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	if (Player)
 	{
 		Player->SetOverlappingWeapon(nullptr);
+	}
+}
+
+void AEWeapon::OnRep_WeaponState()
+{
+	switch (WeaponState)
+	{
+	case EWeaponState::WS_Equipped:
+		ShowPickupWidget(false);
+		break;
 	}
 }
 

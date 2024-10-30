@@ -13,19 +13,19 @@ void UEOverheadWidget::NativeDestruct()
 
 void UEOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
-	GetWorld()->GetTimerManager().SetTimer(CheckPlayerStateTimerHandle,
-		[InPawn, this]()
-		{
-			if (const APlayerState* PlayerState = InPawn->GetPlayerState())
-			{
-				DisplayText->SetText(FText::FromString(PlayerState->GetPlayerName()));
-				GetWorld()->GetTimerManager().ClearTimer(CheckPlayerStateTimerHandle);
-			}
-			else
-			{
-				DisplayText->SetText(FText::FromString("NULL"));
-			}
-		},
-		0.1f, true
-	);
+	//GetWorld()->GetTimerManager().SetTimer(CheckPlayerStateTimerHandle,
+	//	[InPawn, this]()
+	//	{
+	//		if (const APlayerState* PlayerState = InPawn->GetPlayerState())
+	//		{
+	//			DisplayText->SetText(FText::FromString(PlayerState->GetPlayerName()));
+	//			GetWorld()->GetTimerManager().ClearTimer(CheckPlayerStateTimerHandle);
+	//		}
+	//		else
+	//		{
+	//			DisplayText->SetText(FText::FromString("NULL"));
+	//		}
+	//	},
+	//	0.1f, true
+	//);
 }

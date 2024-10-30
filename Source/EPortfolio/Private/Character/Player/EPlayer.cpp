@@ -16,6 +16,7 @@
 #include "HUD/EOverheadWidget.h"
 #include "Weapon/EWeapon.h"
 #include "Component/Player/EPlayerStateComponent.h"
+#include "Component/ECombatComponent.h"
 
 
 AEPlayer::AEPlayer()
@@ -42,6 +43,11 @@ AEPlayer::AEPlayer()
 	{
 		OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 		OverheadWidget->SetupAttachment(RootComponent);
+	}
+
+	{
+		CombatComponent = CreateDefaultSubobject<UECombatComponent>(TEXT("CombatComponent"));
+		CombatComponent->SetIsReplicated(true);
 	}
 }
 
@@ -79,9 +85,10 @@ void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 
-		EnhancedInputComponent->BindAction(IAJump, ETriggerEvent::Started  , this, &ThisClass::JumpAction);
-		EnhancedInputComponent->BindAction(IAMove, ETriggerEvent::Triggered, this, &ThisClass::MoveAction);
-		EnhancedInputComponent->BindAction(IALook, ETriggerEvent::Triggered, this, &ThisClass::LookAction);
+		EnhancedInputComponent->BindAction(IAMove , ETriggerEvent::Triggered, this, &ThisClass::MoveAction );
+		EnhancedInputComponent->BindAction(IALook , ETriggerEvent::Triggered, this, &ThisClass::LookAction );
+		EnhancedInputComponent->BindAction(IAJump , ETriggerEvent::Started  , this, &ThisClass::JumpAction );
+		EnhancedInputComponent->BindAction(IAEquip, ETriggerEvent::Started  , this, &ThisClass::EquipAction);
 	}
 }
 
@@ -91,6 +98,15 @@ void AEPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	DOREPLIFETIME_CONDITION(AEPlayer, OverlappingWeapon, COND_OwnerOnly);
 }
 
+void AEPlayer::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	if (CombatComponent)
+	{
+		CombatComponent->Player = this;
+	}
+}
+
 void AEPlayer::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
@@ -98,13 +114,24 @@ void AEPlayer::Landed(const FHitResult& Hit)
 
 void AEPlayer::OnRep_OverlappingWeapon(AEWeapon* LastWeapon)
 {
-	if (OverlappingWeapon)
+	if (CombatComponent)
 	{
-		OverlappingWeapon->ShowPickupWidget(true);
+		if (HasAuthority())
+		{
+			CombatComponent->EquipWeapon(OverlappingWeapon);
+		}
+		else
+		{
+			ServerEquip();
+		}
 	}
-	if (LastWeapon)
+}
+
+void AEPlayer::ServerEquip_Implementation()
+{
+	if (CombatComponent)
 	{
-		LastWeapon->ShowPickupWidget(false);
+		CombatComponent->EquipWeapon(OverlappingWeapon);
 	}
 }
 
@@ -158,6 +185,17 @@ void AEPlayer::JumpAction(const FInputActionValue& InputActionValue)
 	if (InputActionValue.Get<bool>())
 	{
 		StateComponent->SetJump();
+	}
+}
+
+void AEPlayer::EquipAction(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		if (CombatComponent && HasAuthority())
+		{
+			CombatComponent->EquipWeapon(OverlappingWeapon);
+		}
 	}
 }
 

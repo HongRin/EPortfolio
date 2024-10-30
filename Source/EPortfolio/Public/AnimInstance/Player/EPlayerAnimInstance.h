@@ -3,14 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AnimInstance/EBaseAnimInstance.h"
+#include "AnimInstance/ECharacterAnimInstance.h"
 #include "EPlayerAnimInstance.generated.h"
 
-/**
- * 
- */
 UCLASS()
-class EPORTFOLIO_API UEPlayerAnimInstance : public UEBaseAnimInstance
+class EPORTFOLIO_API UEPlayerAnimInstance : public UECharacterAnimInstance
 {
 	GENERATED_BODY()
 	
