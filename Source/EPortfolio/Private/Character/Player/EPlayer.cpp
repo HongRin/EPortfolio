@@ -48,6 +48,8 @@ AEPlayer::AEPlayer()
 	{
 		CombatComponent = CreateDefaultSubobject<UECombatComponent>(TEXT("CombatComponent"));
 		CombatComponent->SetIsReplicated(true);
+
+		GetMesh()->SetAnimInstanceClass
 	}
 }
 
@@ -114,16 +116,13 @@ void AEPlayer::Landed(const FHitResult& Hit)
 
 void AEPlayer::OnRep_OverlappingWeapon(AEWeapon* LastWeapon)
 {
-	if (CombatComponent)
+	if (OverlappingWeapon)
 	{
-		if (HasAuthority())
-		{
-			CombatComponent->EquipWeapon(OverlappingWeapon);
-		}
-		else
-		{
-			ServerEquip();
-		}
+		OverlappingWeapon->ShowPickupWidget(true);
+	}
+	if (LastWeapon)
+	{
+		LastWeapon->ShowPickupWidget(false);
 	}
 }
 
@@ -192,9 +191,16 @@ void AEPlayer::EquipAction(const FInputActionValue& InputActionValue)
 {
 	if (InputActionValue.Get<bool>())
 	{
-		if (CombatComponent && HasAuthority())
+		if (CombatComponent)
 		{
-			CombatComponent->EquipWeapon(OverlappingWeapon);
+			if (HasAuthority())
+			{
+				CombatComponent->EquipWeapon(OverlappingWeapon);
+			}
+			else
+			{
+				ServerEquip();
+			}
 		}
 	}
 }

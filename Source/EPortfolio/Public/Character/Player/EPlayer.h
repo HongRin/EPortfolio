@@ -24,7 +24,7 @@ protected:
 
 public :
 	virtual void Landed(const FHitResult& Hit) override;
-
+	
 public :
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(class AEWeapon* LastWeapon);
