@@ -18,4 +18,10 @@ public:
 protected :
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsJumpping;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Movement")
+	bool bIsCrouched;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Aiming")
+	bool bIsAiming;
 };

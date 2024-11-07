@@ -2,8 +2,8 @@
 
 
 #include "AnimInstance/Player/EPlayerAnimInstance.h"
+#include "AnimInstance/Player/EPlayerLinkedAnimLayer.h"
 #include "Character/Player/EPlayer.h"
-#include "Component/Player/EPlayerStateComponent.h"
 
 void UEPlayerAnimInstance::NativeInitializeAnimation()
 {
@@ -15,8 +15,12 @@ void UEPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
 	if (OwnerCharacter)
 	{
-		UEPlayerStateComponent* StateComponent = Cast<AEPlayer>(OwnerCharacter)->GetStateComponent();
-		bIsJumpping = StateComponent->IsJumpping();
+		bIsJumpping = OwnerCharacter->GetVelocity().Z > 100;
+		bIsCrouched = OwnerCharacter->bIsCrouched;
+		if (AEPlayer* Player = Cast<AEPlayer>(OwnerCharacter))
+		{
+			bIsAiming = Player->IsAiming();
+		}
 	}
 
 	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);

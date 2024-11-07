@@ -59,7 +59,7 @@ void AEWeapon::BeginPlay()
 void AEWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 }
 
 void AEWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -117,6 +117,3 @@ void AEWeapon::OnRep_WeaponState()
 		break;
 	}
 }
-
-
-

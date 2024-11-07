@@ -3,9 +3,11 @@
 
 #include "Character/Player/EPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
 
 #include "Components/WidgetComponent.h"
+#include "AnimInstance/Player/EPlayerLinkedAnimLayer.h"
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -15,7 +17,6 @@
 
 #include "HUD/EOverheadWidget.h"
 #include "Weapon/EWeapon.h"
-#include "Component/Player/EPlayerStateComponent.h"
 #include "Component/ECombatComponent.h"
 
 
@@ -37,10 +38,6 @@ AEPlayer::AEPlayer()
 	}
 
 	{
-		StateComponent = CreateDefaultSubobject<UEPlayerStateComponent>(TEXT("StateComponent"));
-	}
-
-	{
 		OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
 		OverheadWidget->SetupAttachment(RootComponent);
 	}
@@ -48,9 +45,19 @@ AEPlayer::AEPlayer()
 	{
 		CombatComponent = CreateDefaultSubobject<UECombatComponent>(TEXT("CombatComponent"));
 		CombatComponent->SetIsReplicated(true);
-
-		GetMesh()->SetAnimInstanceClass
 	}
+
+	bUseControllerRotationYaw   = true;
+	bUseControllerRotationRoll  = false;
+	bUseControllerRotationPitch = false;
+
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->bWantsToCrouch = true;
+	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetCharacterMovement()->MaxWalkSpeed = 400.f;
+	GetCharacterMovement()->MaxWalkSpeedCrouched = 400.f;
+
+	GetMesh()->SetIsReplicated(true);
 }
 
 void AEPlayer::BeginPlay()
@@ -75,6 +82,7 @@ void AEPlayer::BeginPlay()
 void AEPlayer::Tick(float InDeltaTime)
 {
 	Super::Tick(InDeltaTime);
+
 }
 
 void AEPlayer::OnRep_PlayerState()
@@ -87,10 +95,14 @@ void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 
-		EnhancedInputComponent->BindAction(IAMove , ETriggerEvent::Triggered, this, &ThisClass::MoveAction );
-		EnhancedInputComponent->BindAction(IALook , ETriggerEvent::Triggered, this, &ThisClass::LookAction );
-		EnhancedInputComponent->BindAction(IAJump , ETriggerEvent::Started  , this, &ThisClass::JumpAction );
-		EnhancedInputComponent->BindAction(IAEquip, ETriggerEvent::Started  , this, &ThisClass::EquipAction);
+		EnhancedInputComponent->BindAction(IAMove    , ETriggerEvent::Triggered, this, &ThisClass::MoveAction );
+		EnhancedInputComponent->BindAction(IALook    , ETriggerEvent::Triggered, this, &ThisClass::LookAction );
+		EnhancedInputComponent->BindAction(IAJump    , ETriggerEvent::Started  , this, &ThisClass::JumpAction );
+		EnhancedInputComponent->BindAction(IAEquip   , ETriggerEvent::Started  , this, &ThisClass::EquipAction);
+		EnhancedInputComponent->BindAction(IACrouch  , ETriggerEvent::Started  , this, &ThisClass::CrouchAction);
+		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Triggered, this, &ThisClass::RunAction);
+		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Triggered, this, &ThisClass::SlowWalkAction);
+		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Triggered, this, &ThisClass::AimingAction);
 	}
 }
 
@@ -134,6 +146,11 @@ void AEPlayer::ServerEquip_Implementation()
 	}
 }
 
+void AEPlayer::ServerSetMaxSpeed_Implementation(float MaxSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+}
+
 void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
 {
 	if (OverlappingWeapon)
@@ -148,6 +165,12 @@ void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
 			OverlappingWeapon->ShowPickupWidget(true);
 		}
 	}
+}
+
+void AEPlayer::SetMaxSpeed(float MaxSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+	ServerSetMaxSpeed(MaxSpeed);
 }
 
 void AEPlayer::MoveAction(const FInputActionValue& InputActionValue)
@@ -183,7 +206,7 @@ void AEPlayer::JumpAction(const FInputActionValue& InputActionValue)
 {
 	if (InputActionValue.Get<bool>())
 	{
-		StateComponent->SetJump();
+		Super::Jump();
 	}
 }
 
@@ -193,17 +216,58 @@ void AEPlayer::EquipAction(const FInputActionValue& InputActionValue)
 	{
 		if (CombatComponent)
 		{
-			if (HasAuthority())
-			{
-				CombatComponent->EquipWeapon(OverlappingWeapon);
-			}
-			else
-			{
-				ServerEquip();
-			}
+			CombatComponent->EquipWeapon(OverlappingWeapon);
+			ServerEquip();
 		}
 	}
 }
 
+void AEPlayer::CrouchAction(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		if (bIsCrouched)
+		{
+			UnCrouch();
+		}
+		else
+		{
+			Crouch();
+		}
+	}
+}
 
+void AEPlayer::RunAction(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		SetMaxSpeed(600.f);
+	}
+	else
+	{
+		SetMaxSpeed(400.f);
+	}
+}
+
+void AEPlayer::SlowWalkAction(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		SetMaxSpeed(300.f);
+	}
+	else
+	{
+		SetMaxSpeed(400.f);
+	}
+}
+
+void AEPlayer::AimingAction(const FInputActionValue& InputActionValue)
+{
+	CombatComponent->SetAiming(InputActionValue.Get<bool>());
+}
+
+bool AEPlayer::IsAiming()
+{
+	return (CombatComponent && CombatComponent->bAiming);
+}
 

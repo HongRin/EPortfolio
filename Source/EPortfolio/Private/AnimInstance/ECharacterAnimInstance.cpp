@@ -4,6 +4,7 @@
 #include "AnimInstance/ECharacterAnimInstance.h"
 #include "Character/EBaseCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 void UECharacterAnimInstance::NativeInitializeAnimation()
@@ -22,4 +23,8 @@ void UECharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds
 
 	bIsInAir = OwnerCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = OwnerCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f;
+
+	FVector HorizontalVelocity = FVector(OwnerCharacter->GetVelocity().X, OwnerCharacter->GetVelocity().Y, 0.f);
+
+	Angle = CalculateDirection(HorizontalVelocity, OwnerCharacter->GetActorRotation());
 }

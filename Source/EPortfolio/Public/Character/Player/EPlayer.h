@@ -33,17 +33,25 @@ private :
 	UFUNCTION(Server, Reliable)
 	void ServerEquip();
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetMaxSpeed(float MaxSpeed);
+
 public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
+	void SetMaxSpeed(float MaxSpeed);
 
 private:
 	void MoveAction(const struct FInputActionValue& InputActionValue);
 	void LookAction(const struct FInputActionValue& InputActionValue);
 	void JumpAction(const struct FInputActionValue& InputActionValue);
 	void EquipAction(const struct FInputActionValue& InputActionValue);
+	void CrouchAction(const struct FInputActionValue& InputActionValue);
+	void RunAction(const struct FInputActionValue& InputActionValue);
+	void SlowWalkAction(const struct FInputActionValue& InputActionValue);
+	void AimingAction(const struct FInputActionValue& InputActionValue);
 
 public :
-	FORCEINLINE class UEPlayerStateComponent* GetStateComponent() { return StateComponent; }
+	bool IsAiming();
 
 public :
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
@@ -58,9 +66,6 @@ private :
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UWidgetComponent> OverheadWidget;
-
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<class UEPlayerStateComponent> StateComponent;
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UECombatComponent> CombatComponent;
@@ -80,4 +85,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<class UInputAction> IAEquip;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<class UInputAction> IACrouch;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<class UInputAction> IARun;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<class UInputAction> IASlowWalk;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<class UInputAction> IAAiming;
 };
