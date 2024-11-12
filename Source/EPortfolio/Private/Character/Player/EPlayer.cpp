@@ -8,6 +8,8 @@
 
 #include "Components/WidgetComponent.h"
 #include "AnimInstance/Player/EPlayerLinkedAnimLayer.h"
+#include "AnimInstance/Player/EPlayerAnimInstance.h"
+
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -18,6 +20,7 @@
 #include "HUD/EOverheadWidget.h"
 #include "Weapon/EWeapon.h"
 #include "Component/ECombatComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 
 AEPlayer::AEPlayer()
@@ -82,7 +85,7 @@ void AEPlayer::BeginPlay()
 void AEPlayer::Tick(float InDeltaTime)
 {
 	Super::Tick(InDeltaTime);
-
+	AimOffset(InDeltaTime);
 }
 
 void AEPlayer::OnRep_PlayerState()
@@ -167,6 +170,36 @@ void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
 	}
 }
 
+void AEPlayer::AimOffset(float DeltaTime)
+{
+	FVector Velocity = GetVelocity();
+	Velocity.Z = 0.f;
+	float Speed = Velocity.Size();
+	bool bIsInAir = GetCharacterMovement()->IsFalling();
+	if (Speed == 0.f && !bIsInAir)
+	{
+		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AimOffsetYaw = DeltaAimRotation.Yaw;
+		bUseControllerRotationYaw = false;
+	}
+	if (Speed > 0.f || bIsInAir)
+	{
+		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		AimOffsetYaw = 0.f;
+		bUseControllerRotationYaw = true;
+	}
+	AimOffsetPitch = GetBaseAimRotation().Pitch;
+	if (AimOffsetPitch > 90.f && !IsLocallyControlled())
+	{
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		AimOffsetPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AimOffsetPitch);
+	}
+	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString::Printf(TEXT("%.1f , %.1f"), AimOffsetPitch, AimOffsetYaw));
+
+}
+
 void AEPlayer::SetMaxSpeed(float MaxSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
@@ -216,8 +249,16 @@ void AEPlayer::EquipAction(const FInputActionValue& InputActionValue)
 	{
 		if (CombatComponent)
 		{
-			CombatComponent->EquipWeapon(OverlappingWeapon);
-			ServerEquip();
+			if (HasAuthority())
+			{
+				CombatComponent->EquipWeapon(OverlappingWeapon);
+				CombatComponent->SetItemAnimLayer();
+			}
+			else
+			{
+				ServerEquip();
+				CombatComponent->ServerSetItemAnimLayer();
+			}
 		}
 	}
 }
@@ -234,6 +275,7 @@ void AEPlayer::CrouchAction(const FInputActionValue& InputActionValue)
 		{
 			Crouch();
 		}
+
 	}
 }
 
@@ -268,6 +310,17 @@ void AEPlayer::AimingAction(const FInputActionValue& InputActionValue)
 
 bool AEPlayer::IsAiming()
 {
-	return (CombatComponent && CombatComponent->bAiming);
+	return (CombatComponent && CombatComponent->bAiming && CombatComponent->EquippedWeapon);
+}
+
+TSubclassOf<class UEPlayerLinkedAnimLayer> AEPlayer::GetAnimLayer()
+{
+	return CombatComponent->ItemAnimLayer;
+}
+
+AEWeapon* AEPlayer::GetEquippedWeapon()
+{
+	if (CombatComponent == nullptr) return nullptr;
+	return CombatComponent->EquippedWeapon;
 }
 

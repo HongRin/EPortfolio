@@ -38,6 +38,9 @@ private :
 
 public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
+
+private :
+	void AimOffset(float DeltaTime);
 	void SetMaxSpeed(float MaxSpeed);
 
 private:
@@ -52,11 +55,17 @@ private:
 
 public :
 	bool IsAiming();
+	TSubclassOf<class UEPlayerLinkedAnimLayer> GetAnimLayer();
+	FORCEINLINE float GetAimOffsetYaw() const { return AimOffsetYaw; }
+	FORCEINLINE float GetAimOffsetPitch() const { return AimOffsetPitch; }
+	FORCEINLINE AEWeapon* GetEquippedWeapon();
 
 public :
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	TObjectPtr<class AEWeapon> OverlappingWeapon;
 
+
+	// Component
 private :
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	TObjectPtr<class USpringArmComponent> CameraBoom;
@@ -70,6 +79,12 @@ private :
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UECombatComponent> CombatComponent;
 
+private :
+	float AimOffsetYaw;
+	float AimOffsetPitch;
+	FRotator StartingAimRotation;
+
+	// Input
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<class UInputMappingContext> IMCPlayer;

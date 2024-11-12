@@ -31,12 +31,14 @@ protected :
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
 
+	void SetItemAnimLayer();
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetItemAnimLayer();
 
 protected :
 	UPROPERTY(EditDefaultsOnly, Category = "AnimLayer")
 	TSubclassOf<class UEPlayerLinkedAnimLayer> UnarmedAnimLayer;
-
 
 private:
 	TObjectPtr<class AEPlayer> Player;
@@ -46,4 +48,7 @@ private:
 
 	UPROPERTY(Replicated)
 	bool bAiming;
+
+	UPROPERTY(Replicated)
+	TSubclassOf<class UEPlayerLinkedAnimLayer> ItemAnimLayer;
 };

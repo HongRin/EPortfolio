@@ -16,12 +16,28 @@ public:
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
 protected :
+	TObjectPtr<class AEWeapon> EquippedWeapon;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsJumpping;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsCrouched;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Equipped")
+	bool bIsEquipped;
+
 	UPROPERTY(BlueprintReadOnly, Category = "Aiming")
 	bool bIsAiming;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Layer")
+	TSubclassOf<class UEPlayerLinkedAnimLayer> ItemAnimLayer;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement)
+	float AimOffsetYaw;
+	UPROPERTY(BlueprintReadOnly, Category = Movement)
+	float AimOffsetPitch;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement)
+	FTransform LeftHandTransform;
 };

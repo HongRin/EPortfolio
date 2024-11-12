@@ -6,9 +6,6 @@
 #include "AnimInstance/EBaseAnimInstance.h"
 #include "ECharacterAnimInstance.generated.h"
 
-/**
- * 
- */
 UCLASS()
 class EPORTFOLIO_API UECharacterAnimInstance : public UEBaseAnimInstance
 {

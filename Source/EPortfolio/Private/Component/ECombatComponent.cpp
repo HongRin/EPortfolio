@@ -4,6 +4,7 @@
 #include "Component/ECombatComponent.h"
 #include "Weapon/EWeapon.h"
 #include "AnimInstance/Player/EPlayerLinkedAnimLayer.h"
+#include "AnimInstance/Player/EPlayerAnimInstance.h"
 #include "Character/Player/EPlayer.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Net/UnrealNetwork.h"
@@ -17,7 +18,7 @@ UECombatComponent::UECombatComponent()
 void UECombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	ItemAnimLayer = UnarmedAnimLayer;
 }
 
 
@@ -33,6 +34,7 @@ void UECombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME(UECombatComponent, bAiming);
 	DOREPLIFETIME(UECombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UECombatComponent, ItemAnimLayer);
 
 }
 void UECombatComponent::EquipWeapon(AEWeapon* WeaponToEquip)
@@ -40,7 +42,6 @@ void UECombatComponent::EquipWeapon(AEWeapon* WeaponToEquip)
 	if (Player == nullptr || WeaponToEquip == nullptr) return;
 	EquippedWeapon = WeaponToEquip;
 
-	Player->GetMesh()->LinkAnimClassLayers(EquippedWeapon->GetWeaponAnimLayerClass());
 	EquippedWeapon->SetWeaponState(EWeaponState::WS_Equipped);
 	const USkeletalMeshSocket* HandSocket = Player->GetMesh()->GetSocketByName(FName("hand_r_weapon"));
 	if (HandSocket)
@@ -53,13 +54,37 @@ void UECombatComponent::EquipWeapon(AEWeapon* WeaponToEquip)
 
 void UECombatComponent::SetAiming(bool bIsAiming)
 {
-	bAiming = bIsAiming;
-	ServerSetAiming(bIsAiming);
+	if (Player->HasAuthority())
+	{
+		bAiming = bIsAiming;
+	}
+	else
+	{
+		ServerSetAiming(bIsAiming);
+	}
 }
-
 
 void UECombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	bAiming = bIsAiming;
 }
+
+void UECombatComponent::SetItemAnimLayer()
+{
+	if (EquippedWeapon)
+	{
+		ItemAnimLayer = EquippedWeapon->GetWeaponAnimLayerClass();
+	}
+}
+
+void UECombatComponent::ServerSetItemAnimLayer_Implementation()
+{
+	if (EquippedWeapon)
+	{
+		ItemAnimLayer = EquippedWeapon->GetWeaponAnimLayerClass();
+	}
+}
+
+
+
 

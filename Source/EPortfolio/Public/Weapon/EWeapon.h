@@ -44,7 +44,8 @@ protected :
 
 public :
 	FORCEINLINE class USphereComponent* GetAreaSphere() const { return AreaSphere; }
-	FORCEINLINE TSubclassOf<class UEPlayerLinkedAnimLayer> GetWeaponAnimLayerClass() { return WeaeponAnimLayerClass; }
+	FORCEINLINE TSubclassOf<class UEPlayerLinkedAnimLayer> GetWeaponAnimLayerClass() { return WeaponAnimLayerClass; }
+	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
 
 protected :
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon Properties")
@@ -53,8 +54,8 @@ protected :
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon Properties")
 	TObjectPtr<class UWidgetComponent> PickupWidget;
 
-	UPROPERTY(Replicated, EditDefaultsOnly, Category = "Weapon Properties")
-	TSubclassOf<class UEPlayerLinkedAnimLayer> WeaeponAnimLayerClass;
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon Properties")
+	TSubclassOf<class UEPlayerLinkedAnimLayer> WeaponAnimLayerClass;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
@@ -62,6 +63,5 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState;
-
 
 };
