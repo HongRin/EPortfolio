@@ -3,17 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Character/EArmedCharacter.h"
+#include "Character/EBaseCharacter.h"
+#include "Type.h"
 #include "EPlayer.generated.h"
 
 UCLASS()
-class EPORTFOLIO_API AEPlayer : public AEArmedCharacter
+class EPORTFOLIO_API AEPlayer : public AEBaseCharacter
 {
 	GENERATED_BODY()
 	
 public :
 	AEPlayer();
 
+	// override function
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float InDeltaTime) override;
@@ -21,9 +23,6 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void PostInitializeComponents() override;
-
-public :
-	virtual void Landed(const FHitResult& Hit) override;
 	
 public :
 	UFUNCTION()
@@ -42,6 +41,7 @@ public:
 private :
 	void AimOffset(float DeltaTime);
 	void SetMaxSpeed(float MaxSpeed);
+	void TurnInPlace(float DeltaTime);
 
 private:
 	void MoveAction(const struct FInputActionValue& InputActionValue);
@@ -55,10 +55,12 @@ private:
 
 public :
 	bool IsAiming();
+	AEWeapon* GetEquippedWeapon();
 	TSubclassOf<class UEPlayerLinkedAnimLayer> GetAnimLayer();
 	FORCEINLINE float GetAimOffsetYaw() const { return AimOffsetYaw; }
 	FORCEINLINE float GetAimOffsetPitch() const { return AimOffsetPitch; }
-	FORCEINLINE AEWeapon* GetEquippedWeapon();
+	FORCEINLINE ETurnType GetTurnType() const { return TurnType; }
+
 
 public :
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
@@ -80,11 +82,13 @@ private :
 	TObjectPtr<class UECombatComponent> CombatComponent;
 
 private :
-	float AimOffsetYaw;
-	float AimOffsetPitch;
-	FRotator StartingAimRotation;
+	float     AimOffsetYaw;
+	float     AimOffsetPitch;
+	FRotator  StartingAimRotation;
+	ETurnType TurnType;
+	float     InterpAimOffsetYaw;
 
-	// Input
+	/* Input */
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<class UInputMappingContext> IMCPlayer;

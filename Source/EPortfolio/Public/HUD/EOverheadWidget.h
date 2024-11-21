@@ -15,13 +15,11 @@ public :
 	virtual void NativeDestruct() override;
 
 public :
-	UFUNCTION(BlueprintCallable)
 	void ShowPlayerName(APawn* InPawn);
 
 public:
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> DisplayText;
-	
 
 private :
 	FTimerHandle CheckPlayerStateTimerHandle;

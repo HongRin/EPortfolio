@@ -57,7 +57,6 @@ protected :
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon Properties")
 	TSubclassOf<class UEPlayerLinkedAnimLayer> WeaponAnimLayerClass;
 
-private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 

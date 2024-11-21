@@ -61,6 +61,8 @@ AEPlayer::AEPlayer()
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 400.f;
 
 	GetMesh()->SetIsReplicated(true);
+
+	TurnType = ETurnType::T_Not;
 }
 
 void AEPlayer::BeginPlay()
@@ -124,10 +126,6 @@ void AEPlayer::PostInitializeComponents()
 	}
 }
 
-void AEPlayer::Landed(const FHitResult& Hit)
-{
-	Super::Landed(Hit);
-}
 
 void AEPlayer::OnRep_OverlappingWeapon(AEWeapon* LastWeapon)
 {
@@ -182,12 +180,19 @@ void AEPlayer::AimOffset(float DeltaTime)
 		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
 		AimOffsetYaw = DeltaAimRotation.Yaw;
 		bUseControllerRotationYaw = false;
+		if (TurnType == ETurnType::T_Not)
+		{
+			InterpAimOffsetYaw = AimOffsetYaw;
+		}
+		bUseControllerRotationYaw = true;
+		TurnInPlace(DeltaTime);
 	}
 	if (Speed > 0.f || bIsInAir)
 	{
 		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
 		AimOffsetYaw = 0.f;
 		bUseControllerRotationYaw = true;
+		TurnType = ETurnType::T_Not;
 	}
 	AimOffsetPitch = GetBaseAimRotation().Pitch;
 	if (AimOffsetPitch > 90.f && !IsLocallyControlled())
@@ -196,14 +201,35 @@ void AEPlayer::AimOffset(float DeltaTime)
 		FVector2D OutRange(-90.f, 0.f);
 		AimOffsetPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AimOffsetPitch);
 	}
-	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString::Printf(TEXT("%.1f , %.1f"), AimOffsetPitch, AimOffsetYaw));
-
 }
 
 void AEPlayer::SetMaxSpeed(float MaxSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	ServerSetMaxSpeed(MaxSpeed);
+}
+
+void AEPlayer::TurnInPlace(float DeltaTime)
+{
+	if (AimOffsetYaw > 90.f)
+	{
+		TurnType = ETurnType::T_Right;
+	}
+	else if (AimOffsetYaw < -90.f)
+	{
+		TurnType = ETurnType::T_Left;
+	}
+
+	if (TurnType != ETurnType::T_Not)
+	{
+		InterpAimOffsetYaw = FMath::FInterpTo(InterpAimOffsetYaw, 0.f, DeltaTime, 7.f);
+		AimOffsetYaw = InterpAimOffsetYaw;
+		if (FMath::Abs(AimOffsetYaw) < 15.f)
+		{
+			TurnType = ETurnType::T_Not;
+			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
+		}
+	}
 }
 
 void AEPlayer::MoveAction(const FInputActionValue& InputActionValue)
@@ -237,7 +263,7 @@ void AEPlayer::LookAction(const FInputActionValue& InputActionValue)
 
 void AEPlayer::JumpAction(const FInputActionValue& InputActionValue)
 {
-	if (InputActionValue.Get<bool>())
+	if (!bIsCrouched)
 	{
 		Super::Jump();
 	}
@@ -281,6 +307,8 @@ void AEPlayer::CrouchAction(const FInputActionValue& InputActionValue)
 
 void AEPlayer::RunAction(const FInputActionValue& InputActionValue)
 {
+	if (IsAiming()) return;
+
 	if (InputActionValue.Get<bool>())
 	{
 		SetMaxSpeed(600.f);
@@ -306,6 +334,11 @@ void AEPlayer::SlowWalkAction(const FInputActionValue& InputActionValue)
 void AEPlayer::AimingAction(const FInputActionValue& InputActionValue)
 {
 	CombatComponent->SetAiming(InputActionValue.Get<bool>());
+	
+	if (InputActionValue.Get<bool>())
+	{
+		SetMaxSpeed(400.0f);
+	}
 }
 
 bool AEPlayer::IsAiming()

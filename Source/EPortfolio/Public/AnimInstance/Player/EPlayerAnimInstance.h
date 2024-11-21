@@ -4,7 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "AnimInstance/ECharacterAnimInstance.h"
+#include "Type.h"
 #include "EPlayerAnimInstance.generated.h"
+
+UENUM(BlueprintType)
+enum class EDirectionType : uint8
+{
+	Forward,
+	Backward,
+	Right,
+	Left,
+};
 
 UCLASS()
 class EPORTFOLIO_API UEPlayerAnimInstance : public UECharacterAnimInstance
@@ -17,6 +27,17 @@ public:
 
 protected :
 	TObjectPtr<class AEWeapon> EquippedWeapon;
+	FRotator CharacterRotationLastFrame;
+	FRotator CharacterRotation;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float DirectionAngle;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	EDirectionType DirectionType;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	float Lean;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsJumpping;
@@ -40,4 +61,7 @@ protected :
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
 	FTransform LeftHandTransform;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement)
+	ETurnType TurnType;
 };

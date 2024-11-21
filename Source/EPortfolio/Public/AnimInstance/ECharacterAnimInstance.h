@@ -27,8 +27,5 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bIsAccelerating;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Movement")
-	float Angle;
 };
  
