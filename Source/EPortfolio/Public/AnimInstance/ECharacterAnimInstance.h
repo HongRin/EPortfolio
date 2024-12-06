@@ -15,7 +15,10 @@ public:
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds) override;
 
-protected:
+protected :
+	FVector Velocity;
+
+protected :
 	UPROPERTY(BlueprintReadOnly, Category = "Character")
 	TObjectPtr<class AEBaseCharacter> OwnerCharacter;
 

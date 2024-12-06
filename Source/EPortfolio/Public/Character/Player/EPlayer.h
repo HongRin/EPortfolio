@@ -39,9 +39,7 @@ public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
 
 private :
-	void AimOffset(float DeltaTime);
 	void SetMaxSpeed(float MaxSpeed);
-	void TurnInPlace(float DeltaTime);
 
 private:
 	void MoveAction(const struct FInputActionValue& InputActionValue);
@@ -52,15 +50,15 @@ private:
 	void RunAction(const struct FInputActionValue& InputActionValue);
 	void SlowWalkAction(const struct FInputActionValue& InputActionValue);
 	void AimingAction(const struct FInputActionValue& InputActionValue);
+	void FiringAction(const struct FInputActionValue& InputActionValue);
+
 
 public :
 	bool IsAiming();
 	AEWeapon* GetEquippedWeapon();
 	TSubclassOf<class UEPlayerLinkedAnimLayer> GetAnimLayer();
-	FORCEINLINE float GetAimOffsetYaw() const { return AimOffsetYaw; }
-	FORCEINLINE float GetAimOffsetPitch() const { return AimOffsetPitch; }
-	FORCEINLINE ETurnType GetTurnType() const { return TurnType; }
-
+	FVector GetHitTarget() const;
+	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; };
 
 public :
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
@@ -80,13 +78,6 @@ private :
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UECombatComponent> CombatComponent;
-
-private :
-	float     AimOffsetYaw;
-	float     AimOffsetPitch;
-	FRotator  StartingAimRotation;
-	ETurnType TurnType;
-	float     InterpAimOffsetYaw;
 
 	/* Input */
 protected:
@@ -116,4 +107,7 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
 	TObjectPtr<class UInputAction> IAAiming;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Input")
+	TObjectPtr<class UInputAction> IAFire;
 };

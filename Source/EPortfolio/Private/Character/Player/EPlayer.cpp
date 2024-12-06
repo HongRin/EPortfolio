@@ -32,6 +32,8 @@ AEPlayer::AEPlayer()
 		CameraBoom->SetupAttachment(GetMesh());
 		CameraBoom->TargetArmLength = 600.f;
 		CameraBoom->bUsePawnControlRotation = true;
+		CameraBoom->bEnableCameraLag = true;
+		CameraBoom->bEnableCameraRotationLag= true;
 	}
 
 	{
@@ -61,8 +63,6 @@ AEPlayer::AEPlayer()
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 400.f;
 
 	GetMesh()->SetIsReplicated(true);
-
-	TurnType = ETurnType::T_Not;
 }
 
 void AEPlayer::BeginPlay()
@@ -87,7 +87,6 @@ void AEPlayer::BeginPlay()
 void AEPlayer::Tick(float InDeltaTime)
 {
 	Super::Tick(InDeltaTime);
-	AimOffset(InDeltaTime);
 }
 
 void AEPlayer::OnRep_PlayerState()
@@ -108,6 +107,8 @@ void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Triggered, this, &ThisClass::RunAction);
 		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Triggered, this, &ThisClass::SlowWalkAction);
 		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Triggered, this, &ThisClass::AimingAction);
+		EnhancedInputComponent->BindAction(IAFire    , ETriggerEvent::Triggered, this, &ThisClass::FiringAction);
+
 	}
 }
 
@@ -168,68 +169,10 @@ void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
 	}
 }
 
-void AEPlayer::AimOffset(float DeltaTime)
-{
-	FVector Velocity = GetVelocity();
-	Velocity.Z = 0.f;
-	float Speed = Velocity.Size();
-	bool bIsInAir = GetCharacterMovement()->IsFalling();
-	if (Speed == 0.f && !bIsInAir)
-	{
-		FRotator CurrentAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
-		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
-		AimOffsetYaw = DeltaAimRotation.Yaw;
-		bUseControllerRotationYaw = false;
-		if (TurnType == ETurnType::T_Not)
-		{
-			InterpAimOffsetYaw = AimOffsetYaw;
-		}
-		bUseControllerRotationYaw = true;
-		TurnInPlace(DeltaTime);
-	}
-	if (Speed > 0.f || bIsInAir)
-	{
-		StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
-		AimOffsetYaw = 0.f;
-		bUseControllerRotationYaw = true;
-		TurnType = ETurnType::T_Not;
-	}
-	AimOffsetPitch = GetBaseAimRotation().Pitch;
-	if (AimOffsetPitch > 90.f && !IsLocallyControlled())
-	{
-		FVector2D InRange(270.f, 360.f);
-		FVector2D OutRange(-90.f, 0.f);
-		AimOffsetPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AimOffsetPitch);
-	}
-}
-
 void AEPlayer::SetMaxSpeed(float MaxSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 	ServerSetMaxSpeed(MaxSpeed);
-}
-
-void AEPlayer::TurnInPlace(float DeltaTime)
-{
-	if (AimOffsetYaw > 90.f)
-	{
-		TurnType = ETurnType::T_Right;
-	}
-	else if (AimOffsetYaw < -90.f)
-	{
-		TurnType = ETurnType::T_Left;
-	}
-
-	if (TurnType != ETurnType::T_Not)
-	{
-		InterpAimOffsetYaw = FMath::FInterpTo(InterpAimOffsetYaw, 0.f, DeltaTime, 7.f);
-		AimOffsetYaw = InterpAimOffsetYaw;
-		if (FMath::Abs(AimOffsetYaw) < 15.f)
-		{
-			TurnType = ETurnType::T_Not;
-			StartingAimRotation = FRotator(0.f, GetBaseAimRotation().Yaw, 0.f);
-		}
-	}
 }
 
 void AEPlayer::MoveAction(const FInputActionValue& InputActionValue)
@@ -341,6 +284,16 @@ void AEPlayer::AimingAction(const FInputActionValue& InputActionValue)
 	}
 }
 
+void AEPlayer::FiringAction(const FInputActionValue& InputActionValue)
+{
+	if (CombatComponent == nullptr) return;
+	
+	if (InputActionValue.Get<bool>())
+	{
+		CombatComponent->Firing();
+	}
+}
+
 bool AEPlayer::IsAiming()
 {
 	return (CombatComponent && CombatComponent->bAiming && CombatComponent->EquippedWeapon);
@@ -349,6 +302,12 @@ bool AEPlayer::IsAiming()
 TSubclassOf<class UEPlayerLinkedAnimLayer> AEPlayer::GetAnimLayer()
 {
 	return CombatComponent->ItemAnimLayer;
+}
+
+FVector AEPlayer::GetHitTarget() const
+{
+	if (CombatComponent == nullptr) return FVector();
+	return CombatComponent->HitTarget;
 }
 
 AEWeapon* AEPlayer::GetEquippedWeapon()

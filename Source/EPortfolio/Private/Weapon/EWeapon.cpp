@@ -6,6 +6,8 @@
 #include "Components/WidgetComponent.h"
 #include "Components/SphereComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "Weapon/ECasing.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 AEWeapon::AEWeapon()
 {
@@ -17,11 +19,9 @@ AEWeapon::AEWeapon()
 		
 		SetRootComponent(WeaponMesh);
 		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		// WeaponMesh->SetCollisionProfileName(FName("PhysicsActor"));
-		// WeaponMesh->SetMobility(EComponentMobility::Movable);
-		// WeaponMesh->SetSimulatePhysics(true);
 	}
 
 	{
@@ -86,6 +86,33 @@ void AEWeapon::SetWeaponState(EWeaponState State)
 		ShowPickupWidget(false);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
+	}
+}
+
+void AEWeapon::Fire(const FVector& HitTarget)
+{
+	if (IsValid(WeaponFireAnimantion))
+	{
+		WeaponMesh->PlayAnimation(WeaponFireAnimantion, false);
+	}
+
+	if (CasingClass)
+	{
+		const USkeletalMeshSocket* EjectSocket = WeaponMesh->GetSocketByName(FName("Eject"));
+		if (EjectSocket)
+		{
+			FTransform SocketTransform = EjectSocket->GetSocketTransform(WeaponMesh);
+
+			UWorld* World = GetWorld();
+			if (World)
+			{
+				World->SpawnActor<AECasing>(
+					CasingClass,
+					SocketTransform.GetLocation(),
+					SocketTransform.GetRotation().Rotator()
+				);
+			}
+		}
 	}
 }
 

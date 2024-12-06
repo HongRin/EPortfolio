@@ -31,6 +31,7 @@ protected:
 public :
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);
+	virtual void Fire(const FVector& HitTarget);
 
 protected :
 	UFUNCTION()
@@ -46,6 +47,11 @@ public :
 	FORCEINLINE class USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE TSubclassOf<class UEPlayerLinkedAnimLayer> GetWeaponAnimLayerClass() { return WeaponAnimLayerClass; }
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+	FORCEINLINE UAnimMontage* GetWeaponFireMontage() const { return WeaponFireMontage; }
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+	FORCEINLINE float GetZoomInterpSpeed() const { return ZoomInterpSpeed; }
+
+
 
 protected :
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon Properties")
@@ -60,7 +66,41 @@ protected :
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon Properties")
+	TSubclassOf<class AECasing> CasingClass;
+
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<class UAnimMontage> WeaponFireMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	TObjectPtr<class UAnimationAsset> WeaponFireAnimantion;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ZoomInterpSpeed = 20.f;
+
+public :
+	UPROPERTY(EditDefaultsOnly, Category = Crosshairs)
+	TObjectPtr<class UTexture2D> CrosshairsCenter;
+
+	UPROPERTY(EditDefaultsOnly, Category = Crosshairs)
+	TObjectPtr<class UTexture2D> CrosshairsLeft;
+
+	UPROPERTY(EditDefaultsOnly, Category = Crosshairs)
+	TObjectPtr<class UTexture2D> CrosshairsRight;
+
+	UPROPERTY(EditDefaultsOnly, Category = Crosshairs)
+	TObjectPtr<class UTexture2D> CrosshairsTop;
+
+	UPROPERTY(EditDefaultsOnly, Category = Crosshairs)
+	TObjectPtr<class UTexture2D> CrosshairsBottom;
+
+	
+
 
 };

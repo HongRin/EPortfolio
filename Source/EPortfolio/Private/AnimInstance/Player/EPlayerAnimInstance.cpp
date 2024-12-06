@@ -11,81 +11,146 @@ void UEPlayerAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
 
+	if (OwnerCharacter)
+	{
+		Player = Cast<AEPlayer>(OwnerCharacter);
+	}
 }
 
 void UEPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 {
+	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+
 	if (OwnerCharacter)
 	{
-		bIsJumpping = OwnerCharacter->GetVelocity().Z > 100;
-
+		bIsJumpping = Velocity.Z > 0.f;
 		bIsCrouched = OwnerCharacter->bIsCrouched;
-
-		FVector Velocity2D = FVector(OwnerCharacter->GetVelocity().X, OwnerCharacter->GetVelocity().Y, 0.f);
-
-		DirectionAngle = UKismetMathLibrary::NormalizeAxis((CalculateDirection(Velocity2D, OwnerCharacter->GetActorRotation())));
-
-		if (UKismetMathLibrary::InRange_FloatFloat(DirectionAngle, -45, 45, false, true))
-		{
-			DirectionType = EDirectionType::Forward;
-		}
-		else if (UKismetMathLibrary::InRange_FloatFloat(DirectionAngle, 45, 135, false, true))
-		{
-			DirectionType = EDirectionType::Right;
-			DirectionAngle -= 90.f;
-		}
-		else if (DirectionAngle <= -135 || DirectionAngle > 135)
-		{
-			DirectionType = EDirectionType::Backward;
-			DirectionAngle -= 180.f;
-		}
-		else if (UKismetMathLibrary::InRange_FloatFloat(DirectionAngle, -135, -45, false, true))
-		{
-			DirectionType = EDirectionType::Left;
-			DirectionAngle -= -90.f;
-		}
-
-
 		CharacterRotationLastFrame = CharacterRotation;
 		CharacterRotation = OwnerCharacter->GetActorRotation();
-		const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
-		const float Target = Delta.Yaw / DeltaSeconds;
-		const float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 6.f);
-		Lean = FMath::Clamp(Interp, -90.f, 90.f);
 
-		if (AEPlayer* Player = Cast<AEPlayer>(OwnerCharacter))
+		SetDirectionType();
+		SetLean(DeltaSeconds);
+		AimOffset(DeltaSeconds);
+	}
+
+	if (Player)
+	{
+		bIsAiming      = Player->IsAiming();
+		bIsEquipped    = IsValid(Player->GetEquippedWeapon());
+
+		if (bIsEquipped && Player->GetMesh())
 		{
-			bIsAiming = Player->IsAiming();
-			AimOffsetYaw = Player->GetAimOffsetYaw();
-			AimOffsetPitch = Player->GetAimOffsetPitch();
-			EquippedWeapon = Player->GetEquippedWeapon();
-			bIsEquipped = IsValid(EquippedWeapon);
-			TurnType = Player->GetTurnType();
+			SetLeftHandTransform();
+		}
 
-			if (Player->GetAnimLayer() != ItemAnimLayer)
-			{
-				ItemAnimLayer = Player->GetAnimLayer();
 
-				AsyncTask(ENamedThreads::GameThread, [this]()
+		if (Player->GetAnimLayer() != ItemAnimLayer)
+		{
+			ItemAnimLayer = Player->GetAnimLayer();
+			GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, FString(TEXT("Changed!")));
+
+			AsyncTask(ENamedThreads::GameThread, [this, DeltaSeconds]()
+				{
+					if (GetOwningComponent())
 					{
-						if (GetOwningComponent())
-						{
-							GetOwningComponent()->LinkAnimClassLayers(ItemAnimLayer);
-						}
-					});
-			}
-
-			if (EquippedWeapon && EquippedWeapon->GetWeaponMesh() && Player->GetMesh())
-			{
-				LeftHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
-				FVector LeftOutPosition;
-				FRotator LeftOutRotation;
-				Player->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), LeftHandTransform.Rotator(), LeftOutPosition, LeftOutRotation);
-				LeftHandTransform.SetLocation(LeftOutPosition);
-				LeftHandTransform.SetRotation(FQuat(LeftOutRotation));
-			}
+						GetOwningComponent()->LinkAnimClassLayers(ItemAnimLayer);
+					}
+				});
 		}
 	}
 
-	Super::NativeThreadSafeUpdateAnimation(DeltaSeconds);
+}
+
+void UEPlayerAnimInstance::SetDirectionType()
+{
+	FVector Velocity2D = FVector(Velocity.X, Velocity.Y, 0.f);
+
+	DirectionAngle = UKismetMathLibrary::NormalizeAxis((CalculateDirection(Velocity2D, CharacterRotation)));
+
+	if (UKismetMathLibrary::InRange_FloatFloat(DirectionAngle, -45, 45, false, true))
+	{
+		DirectionType = EDirectionType::Forward;
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(DirectionAngle, 45, 135, false, true))
+	{
+		DirectionType = EDirectionType::Right;
+		DirectionAngle -= 90.f;
+	}
+	else if (DirectionAngle <= -135 || DirectionAngle > 135)
+	{
+		DirectionType = EDirectionType::Backward;
+		DirectionAngle -= 180.f;
+	}
+	else if (UKismetMathLibrary::InRange_FloatFloat(DirectionAngle, -135, -45, false, true))
+	{
+		DirectionType = EDirectionType::Left;
+		DirectionAngle -= -90.f;
+	}
+}
+
+void UEPlayerAnimInstance::SetLean(float DeltaSeconds)
+{
+	const FRotator Delta = UKismetMathLibrary::NormalizedDeltaRotator(CharacterRotation, CharacterRotationLastFrame);
+	const float Target = Delta.Yaw / DeltaSeconds;
+	const float Interp = FMath::FInterpTo(Lean, Target, DeltaSeconds, 6.f);
+	Lean = FMath::Clamp(Interp, -90.f, 90.f);
+}
+
+void UEPlayerAnimInstance::SetLeftHandTransform()
+{
+	LeftHandTransform = Player->GetEquippedWeapon()->GetWeaponMesh()->GetSocketTransform(FName("LeftHandSocket"), ERelativeTransformSpace::RTS_World);
+	FVector  LeftOutPosition;
+	FRotator LeftOutRotation;
+	Player->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), LeftHandTransform.Rotator(), LeftOutPosition, LeftOutRotation);
+	LeftHandTransform.SetLocation(LeftOutPosition);
+	LeftHandTransform.SetRotation(FQuat(LeftOutRotation));
+}
+
+void UEPlayerAnimInstance::AimOffset(float DeltaSeconds)
+{
+	if (Speed == 0.f && !bIsInAir) 
+	{
+		FRotator CurrentAimRotation = FRotator(0.f, OwnerCharacter->GetBaseAimRotation().Yaw, 0.f);
+		FRotator DeltaAimRotation = UKismetMathLibrary::NormalizedDeltaRotator(CurrentAimRotation, StartingAimRotation);
+		AimOffsetYaw = DeltaAimRotation.Yaw;
+		if (bIsTurn == false)
+		{
+			InterpAimOffsetYaw = AimOffsetYaw;
+		}
+		TurnInPlace(DeltaSeconds);
+	}
+
+	if (Speed > 0.f || bIsInAir) 
+	{
+		StartingAimRotation = FRotator(0.f, OwnerCharacter->GetBaseAimRotation().Yaw, 0.f);
+		AimOffsetYaw = 0.f;
+		bIsTurn = false;
+	}
+
+	AimOffsetPitch = OwnerCharacter->GetBaseAimRotation().Pitch;
+	if (AimOffsetPitch > 90.f && !OwnerCharacter->IsLocallyControlled())
+	{
+		FVector2D InRange(270.f, 360.f);
+		FVector2D OutRange(-90.f, 0.f);
+		AimOffsetPitch = FMath::GetMappedRangeValueClamped(InRange, OutRange, AimOffsetPitch);
+	}
+}
+
+void UEPlayerAnimInstance::TurnInPlace(float DeltaSeconds)
+{
+	if (FMath::Abs(AimOffsetYaw) > 90.f)
+	{
+		bIsTurn = true;
+	}
+
+	if (bIsTurn)
+	{
+		InterpAimOffsetYaw = FMath::FInterpTo(InterpAimOffsetYaw, 0.f, DeltaSeconds, 4.f);
+		AimOffsetYaw = InterpAimOffsetYaw;
+		if (FMath::Abs(AimOffsetYaw) < 1.f)
+		{
+			bIsTurn = false;
+			StartingAimRotation = FRotator(0.f, OwnerCharacter->GetBaseAimRotation().Yaw, 0.f);
+		}
+	}
 }

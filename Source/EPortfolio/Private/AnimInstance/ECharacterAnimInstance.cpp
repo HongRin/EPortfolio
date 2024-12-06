@@ -19,8 +19,8 @@ void UECharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds
 		return;
 	}
 
-	Speed = OwnerCharacter->GetVelocity().Size2D();
-
-	bIsInAir = OwnerCharacter->GetCharacterMovement()->IsFalling();
+	Velocity		= OwnerCharacter->GetVelocity();
+	Speed           = Velocity.Size2D();
+	bIsInAir        = OwnerCharacter->GetCharacterMovement()->IsFalling();
 	bIsAccelerating = OwnerCharacter->GetCharacterMovement()->GetCurrentAcceleration().Size() > 0.f;
 }
