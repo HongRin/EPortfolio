@@ -8,6 +8,14 @@
 #include "Net/UnrealNetwork.h"
 #include "Weapon/ECasing.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Camera/CameraComponent.h"
+#include "Components/TimelineComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "LegacyCameraShake.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/DecalComponent.h"
+#include "Materials/MaterialInstanceConstant.h"
 
 AEWeapon::AEWeapon()
 {
@@ -35,25 +43,36 @@ AEWeapon::AEWeapon()
 		PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 		PickupWidget->SetupAttachment(WeaponMesh);
 	}
+
+	{
+		Timeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("Timeline"));
+	}
 }
 
 void AEWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
+
+
 	if (HasAuthority())
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnBeginOverlap);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnEndOverlap);
+
 	}
 
 	if (PickupWidget)
 	{
 		PickupWidget->SetVisibility(false);
 	}
-
+	FOnTimelineFloat timeline;
+	timeline.BindUFunction(this, "OnAiming");
+	Timeline->AddInterpFloat(WeaponDatas.AimCurve, timeline);
+	Timeline->SetLooping(false);
+	Timeline->SetPlayRate(WeaponDatas.AimingSpeed);
 }
 
 void AEWeapon::Tick(float DeltaTime)
@@ -91,12 +110,12 @@ void AEWeapon::SetWeaponState(EWeaponState State)
 
 void AEWeapon::Fire(const FVector& HitTarget)
 {
-	if (IsValid(WeaponFireAnimantion))
+	if (IsValid(WeaponDatas.AnimDatas.WeaponFireAnimantion))
 	{
-		WeaponMesh->PlayAnimation(WeaponFireAnimantion, false);
+		WeaponMesh->PlayAnimation(WeaponDatas.AnimDatas.WeaponFireAnimantion, false);
 	}
 
-	if (CasingClass)
+	if (WeaponDatas.ClassDatas.CasingClass)
 	{
 		const USkeletalMeshSocket* EjectSocket = WeaponMesh->GetSocketByName(FName("Eject"));
 		if (EjectSocket)
@@ -107,13 +126,44 @@ void AEWeapon::Fire(const FVector& HitTarget)
 			if (World)
 			{
 				World->SpawnActor<AECasing>(
-					CasingClass,
+					WeaponDatas.ClassDatas.CasingClass,
 					SocketTransform.GetLocation(),
 					SocketTransform.GetRotation().Rotator()
 				);
 			}
 		}
 	}
+
+	if (WeaponDatas.CameraShakeClass)
+	{
+		APlayerController* Controller = Cast<AEPlayer>(GetOwner())->GetController<APlayerController>();
+	
+		if (Controller)
+			Controller->PlayerCameraManager->StartCameraShake(WeaponDatas.CameraShakeClass);
+	}
+
+
+	Cast<AEPlayer>(GetOwner())->AddControllerPitchInput(-WeaponDatas.RecoilRate * UKismetMathLibrary::RandomFloatInRange(0.8f, 1.2f));
+}
+
+void AEWeapon::Aimimg(bool bAiming)
+{
+	if (bAiming)
+	{
+		Timeline->PlayFromStart();
+		SetAimData(WeaponDatas.AimDatas);
+	}
+	else
+	{
+		Timeline->ReverseFromEnd();
+		SetAimData(WeaponDatas.BaseDatas);
+	}
+}
+
+void AEWeapon::DrawDecal(const FVector InLocation, const FRotator InRotator)
+{
+	UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), HitDecal, FVector(5), InLocation, InRotator, 10);
+	Decal->SetFadeScreenSize(0);
 }
 
 void AEWeapon::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -144,3 +194,20 @@ void AEWeapon::OnRep_WeaponState()
 		break;
 	}
 }
+
+void AEWeapon::OnAiming(float Output)
+{
+	float FOV = FMath::Lerp(WeaponDatas.AimDatas.FieldOfView, WeaponDatas.BaseDatas.FieldOfView, Output);
+	Cast<AEPlayer>(GetOwner())->GetFollowCamera()->SetFieldOfView(FOV);
+}
+
+void AEWeapon::SetAimData(const FEWeaponAimData& InWeaponAimData)
+{
+	USpringArmComponent* SpringArm = Cast<AEPlayer>(GetOwner())->GetCameraBoom();
+	SpringArm->TargetArmLength = InWeaponAimData.TargetArmLength;
+	SpringArm->SocketOffset = InWeaponAimData.SocketOffset;
+	SpringArm->bEnableCameraLag = InWeaponAimData.bEnableCameraLag;
+}
+
+
+

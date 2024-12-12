@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "ECombatComponent.generated.h"
 
-
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class EPORTFOLIO_API UECombatComponent : public UActorComponent
 {
@@ -24,6 +23,7 @@ protected:
 
 public :
 	void EquipWeapon(class AEWeapon* WeaponToEquip);
+	void PlayHitReactMontage();
 
 protected :
 	void SetAiming(bool bIsAiming);
@@ -31,12 +31,18 @@ protected :
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
 
+	UFUNCTION(Server, Reliable)
+	void ServerSetFiring(bool bIsFiring);
+
 	void SetItemAnimLayer();
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetItemAnimLayer();
 
-	void Firing();
+	void Firing(bool bFireButtonPressed);
+
+	void OnFiring();
+	void FiringTimerFunction();
 
 	UFUNCTION(Server, Reliable)
 	void ServerFiring(const FVector_NetQuantize& TraceHitTarget);
@@ -46,19 +52,11 @@ protected :
 
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
-	void SetHUDCrosshairs(float DeltaTime);
-
-	void InterpFOV(float DeltaTime);
+	void SetHUDCrosshairsSpread(float DeltaTime);
 
 protected :
 	UPROPERTY(EditDefaultsOnly, Category = "AnimLayer")
 	TSubclassOf<class UEPlayerLinkedAnimLayer> UnarmedAnimLayer;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Zoom")
-	float ZoomedFOV = 30.f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Zoom")
-	float ZoomInterpSpeed = 20.f;
 
 private:
 	TObjectPtr<class AEPlayer> Player;
@@ -70,16 +68,28 @@ private:
 	bool bAiming;
 
 	UPROPERTY(Replicated)
+	bool bFiring;
+
+
+	UPROPERTY(Replicated)
 	TSubclassOf<class UEPlayerLinkedAnimLayer> ItemAnimLayer;
 
 	TObjectPtr<class AEPlayerController> Controller;
 	TObjectPtr<class AEHUD> HUD;
 
+	float CrosshairBaseFactor;
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootFactor;
+	float HitDistance;
+	float RecoilAngle;
 
 	FVector HitTarget;
 
-	float DefaultFOV;
-	float CurrentFOV;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	TObjectPtr<class UAnimMontage> HitReactMontage;
+
+	FTimerHandle FireTimer;
+	bool bCanFire;
 };

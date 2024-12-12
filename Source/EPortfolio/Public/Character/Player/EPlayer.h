@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Character/EBaseCharacter.h"
-#include "Type.h"
 #include "EPlayer.generated.h"
 
 UCLASS()
@@ -28,12 +27,16 @@ public :
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(class AEWeapon* LastWeapon);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit();
+
 private :
 	UFUNCTION(Server, Reliable)
 	void ServerEquip();
 
 	UFUNCTION(Server, Reliable)
 	void ServerSetMaxSpeed(float MaxSpeed);
+
 
 public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
@@ -55,10 +58,13 @@ private:
 
 public :
 	bool IsAiming();
+	bool IsFiring();
 	AEWeapon* GetEquippedWeapon();
 	TSubclassOf<class UEPlayerLinkedAnimLayer> GetAnimLayer();
 	FVector GetHitTarget() const;
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; };
+	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; };
+
 
 public :
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)

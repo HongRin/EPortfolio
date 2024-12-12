@@ -1,7 +1,7 @@
 // Copyright EPortfolio
 
-
 #include "Character/Player/EPlayer.h"
+#include "EPortfolio/EPortfolio.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Camera/CameraComponent.h"
@@ -21,6 +21,7 @@
 #include "Weapon/EWeapon.h"
 #include "Component/ECombatComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Components/CapsuleComponent.h"
 
 
 AEPlayer::AEPlayer()
@@ -29,7 +30,7 @@ AEPlayer::AEPlayer()
 
 	{
 		CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-		CameraBoom->SetupAttachment(GetMesh());
+		CameraBoom->SetupAttachment(GetRootComponent());
 		CameraBoom->TargetArmLength = 600.f;
 		CameraBoom->bUsePawnControlRotation = true;
 		CameraBoom->bEnableCameraLag = true;
@@ -63,6 +64,10 @@ AEPlayer::AEPlayer()
 	GetCharacterMovement()->MaxWalkSpeedCrouched = 400.f;
 
 	GetMesh()->SetIsReplicated(true);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECC_Shot, ECollisionResponse::ECR_Block);
 }
 
 void AEPlayer::BeginPlay()
@@ -79,6 +84,7 @@ void AEPlayer::BeginPlay()
 		{
 			Subsystem->AddMappingContext(IMCPlayer, 0);
 		}
+
 	}
 
 	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
@@ -151,6 +157,14 @@ void AEPlayer::ServerEquip_Implementation()
 void AEPlayer::ServerSetMaxSpeed_Implementation(float MaxSpeed)
 {
 	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+}
+
+void AEPlayer::MulticastHit_Implementation()
+{
+	if (CombatComponent)
+	{
+		CombatComponent->PlayHitReactMontage();
+	}
 }
 
 void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
@@ -288,15 +302,17 @@ void AEPlayer::FiringAction(const FInputActionValue& InputActionValue)
 {
 	if (CombatComponent == nullptr) return;
 	
-	if (InputActionValue.Get<bool>())
-	{
-		CombatComponent->Firing();
-	}
+	CombatComponent->Firing(InputActionValue.Get<bool>());
 }
 
 bool AEPlayer::IsAiming()
 {
 	return (CombatComponent && CombatComponent->bAiming && CombatComponent->EquippedWeapon);
+}
+
+bool AEPlayer::IsFiring()
+{
+	return (CombatComponent && CombatComponent->bFiring && CombatComponent->EquippedWeapon);
 }
 
 TSubclassOf<class UEPlayerLinkedAnimLayer> AEPlayer::GetAnimLayer()

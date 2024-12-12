@@ -36,13 +36,13 @@ void UEPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 	if (Player)
 	{
 		bIsAiming      = Player->IsAiming();
+		bIsFiring      = Player->IsFiring();
 		bIsEquipped    = IsValid(Player->GetEquippedWeapon());
 
 		if (bIsEquipped && Player->GetMesh())
 		{
 			SetLeftHandTransform();
 		}
-
 
 		if (Player->GetAnimLayer() != ItemAnimLayer)
 		{
@@ -120,7 +120,7 @@ void UEPlayerAnimInstance::AimOffset(float DeltaSeconds)
 		TurnInPlace(DeltaSeconds);
 	}
 
-	if (Speed > 0.f || bIsInAir) 
+	if (Speed > 0.f || bIsInAir || bIsFiring)
 	{
 		StartingAimRotation = FRotator(0.f, OwnerCharacter->GetBaseAimRotation().Yaw, 0.f);
 		AimOffsetYaw = 0.f;

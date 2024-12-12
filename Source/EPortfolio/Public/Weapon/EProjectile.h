@@ -38,4 +38,5 @@ protected :
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<class USoundCue> ImpactSound;
 
+
 };

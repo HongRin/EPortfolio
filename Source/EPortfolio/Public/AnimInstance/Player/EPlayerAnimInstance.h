@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "AnimInstance/ECharacterAnimInstance.h"
-#include "Type.h"
 #include "EPlayerAnimInstance.generated.h"
 
 UENUM(BlueprintType)
@@ -31,7 +30,6 @@ private:
 	void AimOffset(float DeltaSeconds);
 	void TurnInPlace(float DeltaSeconds);
 	void SetLeftHandTransform();
-	void SetRightHandTransform();
 
 protected :
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
@@ -56,6 +54,9 @@ protected :
 	bool bIsAiming;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Aiming")
+	bool bIsFiring;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Aiming")
 	float AimOffsetYaw;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Aiming")
@@ -69,12 +70,6 @@ protected :
 
 	UPROPERTY(BlueprintReadOnly, Category = Movement)
 	FTransform LeftHandTransform;
-
-	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	FRotator RightHandRotation;
-
-	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	bool bLocallyControlled;
 
 private:
 	TObjectPtr<class AEPlayer> Player;
