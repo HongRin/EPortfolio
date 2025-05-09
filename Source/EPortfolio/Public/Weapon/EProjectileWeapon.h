@@ -13,7 +13,7 @@ class EPORTFOLIO_API AEProjectileWeapon : public AEWeapon
 	
 public :
 	virtual void Fire(const FVector& HitTarget) override;
-
+	
 protected :
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AEProjectile> ProjectileClass;

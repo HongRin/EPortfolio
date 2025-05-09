@@ -124,11 +124,6 @@ void AEPlayer::Tick(float InDeltaTime)
 	PollInit();
 }
 
-void AEPlayer::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-}
-
 void AEPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);

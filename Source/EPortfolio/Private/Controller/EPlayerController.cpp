@@ -13,15 +13,14 @@
 #include "Components/TextBlock.h"
 #include "Game/EGameState.h"
 
+#include "Game/ELobbyGameMode.h"
+#include "ELogHelpers.h"
+
 void AEPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	PrimaryActorTick.bCanEverTick = true;
-
 	PlayerHUD = Cast<AEHUD>(GetHUD());
-
-	ServerCheckMatchState();
 }
 
 void AEPlayerController::Tick(float DeltaTime)
@@ -36,6 +35,7 @@ void AEPlayerController::Tick(float DeltaTime)
 void AEPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
+
 	AEPlayer* PlayerCharacter = Cast<AEPlayer>(InPawn);
 	if (PlayerCharacter)
 	{
@@ -52,6 +52,7 @@ float AEPlayerController::GetServerTime()
 void AEPlayerController::ReceivedPlayer()
 {
 	Super::ReceivedPlayer();
+
 	if (IsLocalController())
 	{
 		ServerRequestServerTime(GetWorld()->GetTimeSeconds());
@@ -165,6 +166,27 @@ void AEPlayerController::OnMatchStateSet(FName State)
 	}
 }
 
+void AEPlayerController::InitializeMatchState()
+{
+	ServerCheckMatchState();
+}
+
+void AEPlayerController::CheckClientReady()
+{
+	if (IsLocalController())
+	{
+		ServerCheckClientReady();
+	}
+}
+
+void AEPlayerController::ServerCheckClientReady_Implementation()
+{
+	if (AEGameMode* GameMode = Cast<AEGameMode>(UGameplayStatics::GetGameMode(this)))
+	{
+		GameMode->CheckAllClientsReady();
+	}
+}
+
 void AEPlayerController::SetHUDTime()
 {
 	float TimeLeft = 0.f;
@@ -246,17 +268,21 @@ void AEPlayerController::HandleMatchHasStarted()
 	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
 	if (PlayerHUD)
 	{
-		PlayerHUD->AddCharacterOverlay();
+		if (PlayerHUD->GetCharacterOverlay() == nullptr)
+		{
+			PlayerHUD->AddCharacterOverlay();
+		}
+
 		if (PlayerHUD->GetAnnouncement())
 		{
 			PlayerHUD->GetAnnouncement()->SetVisibility(ESlateVisibility::Hidden);
 		}
 	}
 }
-
 void AEPlayerController::HandleCooldown()
 {
 	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
+
 	if (PlayerHUD)
 	{
 		PlayerHUD->GetCharacterOverlay()->RemoveFromParent();
@@ -302,15 +328,15 @@ void AEPlayerController::HandleCooldown()
 
 void AEPlayerController::ServerCheckMatchState_Implementation()
 {
-	AEGameMode* GameMode = Cast<AEGameMode>(UGameplayStatics::GetGameMode(this));
-	if (GameMode)
+	if (AEGameMode* GameMode = Cast<AEGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
 		WarmupTime = GameMode->WarmupTime;
 		MatchTime = GameMode->MatchTime;
 		CooldownTime = GameMode->CooldownTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
 		MatchState = GameMode->GetMatchState();
-		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
+
+ 		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 	}
 }
 
@@ -322,7 +348,10 @@ void AEPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, fl
 	LevelStartingTime = StartingTime;
 	MatchState = StateOfMatch;
 	OnMatchStateSet(MatchState);
-	if (PlayerHUD && MatchState == MatchState::WaitingToStart)
+	
+	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
+
+	if (PlayerHUD && (MatchState == MatchState::WaitingToStart || MatchState == MatchState::EnteringMap))
 	{
 		PlayerHUD->AddAnnouncement();
 	}

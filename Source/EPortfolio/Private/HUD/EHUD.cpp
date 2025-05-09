@@ -2,11 +2,13 @@
 
 
 #include "HUD/EHUD.h"
-#include "GameFramework/PlayerController.h"
+#include "Controller/EPlayerController.h"
 #include "HUD/ECharacterOverlayWidget.h"
 #include "HUD/EAnnouncementWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
+
+#include "ELogHelpers.h"
 
 void AEHUD::DrawHUD()
 {
@@ -51,6 +53,9 @@ void AEHUD::DrawHUD()
 void AEHUD::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	AEPlayerController* PlayerController = Cast<AEPlayerController>(GetOwningPlayerController());
+	PlayerController->CheckClientReady();
 }
 
 void AEHUD::SetHealthHUD(float InHealthPercent)

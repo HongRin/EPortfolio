@@ -17,14 +17,18 @@ namespace MatchState
 AEGameMode::AEGameMode()
 {
 	bDelayedStart = true;
-	//StartPlay();
+}
+
+void AEGameMode::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 void AEGameMode::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (MatchState == MatchState::WaitingToStart)
+	if (MatchState == MatchState::WaitingToStart && bHasInitializedLevelTime)
 	{
 		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if (CountdownTime <= 0.f)
@@ -45,7 +49,41 @@ void AEGameMode::Tick(float DeltaTime)
 		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if (CountdownTime <= 0.f)
 		{
+			bHasInitializedLevelTime = false;
 			RestartGame();
+		}
+	}
+}
+
+void AEGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
+	{
+		AEPlayerController* EPlayerController = Cast<AEPlayerController>(*It);
+		if (EPlayerController)
+		{
+			EPlayerController->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
+void AEGameMode::CheckAllClientsReady()
+{
+	ReadyClients++;
+
+	if (ReadyClients == 2)
+	{
+		LevelStartingTime = GetWorld()->GetTimeSeconds();
+		bHasInitializedLevelTime = true;
+
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			if (AEPlayerController* EPlayerController = Cast<AEPlayerController>(*It))
+			{
+				EPlayerController->InitializeMatchState();
+			}
 		}
 	}
 }
@@ -89,23 +127,5 @@ void AEGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* Elimm
 	}
 }
 
-void AEGameMode::BeginPlay()
-{
-	Super::BeginPlay();
 
-	LevelStartingTime = GetWorld()->GetTimeSeconds();
-}
 
-void AEGameMode::OnMatchStateSet()
-{
-	Super::OnMatchStateSet();
-
-	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; It++)
-	{
-		AEPlayerController* EPlayerController = Cast<AEPlayerController>(*It);
-		if (EPlayerController)
-		{
-			EPlayerController->OnMatchStateSet(MatchState);
-		}
-	}
-}

@@ -6,7 +6,7 @@
 
 UPlayFootstepNotify::UPlayFootstepNotify()
 {
-	bFollow                   = false;
+	bFollow = false;
 }
 
 FString UPlayFootstepNotify::GetNotifyName_Implementation() const
@@ -20,5 +20,6 @@ void UPlayFootstepNotify::Notify(USkeletalMeshComponent* MeshComp, UAnimSequence
 	{
 		VolumeMultiplier = Player->GetFootStepVolume();
 	}
+
 	Super::Notify(MeshComp, Animation, EventReference);
 }

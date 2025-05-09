@@ -20,7 +20,6 @@ public :
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float InDeltaTime) override;
-	virtual void OnRep_PlayerState() override;
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
