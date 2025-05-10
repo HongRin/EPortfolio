@@ -26,6 +26,8 @@
 #include "Game/EGameMode.h"
 #include "Game/EPlayerState.h"
 
+#include "ELogHelpers.h"
+
 
 AEPlayer::AEPlayer()
 {
@@ -145,16 +147,17 @@ void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		EnhancedInputComponent->BindAction(IAMove    , ETriggerEvent::Triggered, this, &ThisClass::MoveAction    );
-		EnhancedInputComponent->BindAction(IALook    , ETriggerEvent::Triggered, this, &ThisClass::LookAction    );
+		EnhancedInputComponent->BindAction(IALook    , ETriggerEvent::Triggered,  this, &ThisClass::LookAction    );
 		EnhancedInputComponent->BindAction(IAJump    , ETriggerEvent::Started  , this, &ThisClass::JumpAction    );
 		EnhancedInputComponent->BindAction(IAEquip   , ETriggerEvent::Started  , this, &ThisClass::EquipAction   );
 		EnhancedInputComponent->BindAction(IACrouch  , ETriggerEvent::Started  , this, &ThisClass::CrouchAction  );
-		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Triggered, this, &ThisClass::RunAction     );
-		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Triggered, this, &ThisClass::SlowWalkAction);
+		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Started  , this, &ThisClass::RunAction     );
+		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Completed, this, &ThisClass::RunAction);
+		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Started  , this, &ThisClass::SlowWalkAction);
+		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Completed, this, &ThisClass::SlowWalkAction);
 		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Triggered, this, &ThisClass::AimingAction  );
 		EnhancedInputComponent->BindAction(IAFire    , ETriggerEvent::Triggered, this, &ThisClass::FiringAction  );
 		EnhancedInputComponent->BindAction(IAReload  , ETriggerEvent::Started  , this, &ThisClass::ReloadAction  );
-		EnhancedInputComponent->BindAction(IADodge   , ETriggerEvent::Triggered  , this, &ThisClass::DodgeAction   );
 	}
 }
 
@@ -203,7 +206,7 @@ void AEPlayer::ServerEquip_Implementation()
 
 void AEPlayer::ServerSetMaxSpeed_Implementation(float MaxSpeed)
 {
-	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+	MulticastSetMaxSpeed(MaxSpeed);
 }
 
 void AEPlayer::MulticastHit_Implementation(FVector2D Direction)
@@ -264,10 +267,9 @@ void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
 	}
 }
 
-void AEPlayer::SetMaxSpeed(float MaxSpeed)
+void AEPlayer::MulticastSetMaxSpeed_Implementation(float MaxSpeed)
 {
-	//GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
-	ServerSetMaxSpeed(MaxSpeed);
+	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 }
 
 void AEPlayer::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
@@ -441,11 +443,11 @@ void AEPlayer::RunAction(const FInputActionValue& InputActionValue)
 
 	if (InputActionValue.Get<bool>())
 	{
-		SetMaxSpeed(RunSpeed);
+		ServerSetMaxSpeed(RunSpeed);
 	}
 	else
 	{
-		SetMaxSpeed(WalkSpeed);
+		ServerSetMaxSpeed(WalkSpeed);
 	}
 }
 
@@ -453,11 +455,11 @@ void AEPlayer::SlowWalkAction(const FInputActionValue& InputActionValue)
 {
 	if (InputActionValue.Get<bool>())
 	{
-		SetMaxSpeed(SlowWalkSpeed);
+		ServerSetMaxSpeed(SlowWalkSpeed);
 	}
 	else
 	{
-		SetMaxSpeed(WalkSpeed);
+		ServerSetMaxSpeed(WalkSpeed);
 	}
 }
 
@@ -467,7 +469,7 @@ void AEPlayer::AimingAction(const FInputActionValue& InputActionValue)
 	
 	if (InputActionValue.Get<bool>())
 	{
-		SetMaxSpeed(WalkSpeed);
+		ServerSetMaxSpeed(WalkSpeed);
 	}
 }
 
@@ -477,12 +479,12 @@ void AEPlayer::FiringAction(const FInputActionValue& InputActionValue)
 	
 	CombatComponent->Firing(InputActionValue.Get<bool>());
 
-	SetMaxSpeed(WalkSpeed);
+	ServerSetMaxSpeed(WalkSpeed);
 }
 
 void AEPlayer::DodgeAction(const FInputActionValue& InputActionValue)
 {
-	MulticastDodge();
+
 }
 
 void AEPlayer::ReloadAction(const FInputActionValue& InputActionValue)

@@ -49,12 +49,14 @@ private :
 	UFUNCTION(Server, Reliable)
 	void ServerSetMaxSpeed(float MaxSpeed);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastSetMaxSpeed(float MaxSpeed);
 
 public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
 
 private :
-	void SetMaxSpeed(float MaxSpeed);
+
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 

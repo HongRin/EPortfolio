@@ -57,8 +57,6 @@ void AEWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
-
-
 	if (HasAuthority())
 	{
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -164,7 +162,6 @@ void AEWeapon::Fire(const FVector& HitTarget)
 				}
 		}
 		Player->AddControllerPitchInput(-WeaponDatas.RecoilRate * UKismetMathLibrary::RandomFloatInRange(0.8f, 1.2f));
-
 	}
 
 	SpendAMMO();

@@ -71,8 +71,6 @@ private :
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFiring(const FVector_NetQuantize& TraceHitTarget);
 
-	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
-
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetHUDCrosshairsSpread(float DeltaTime);

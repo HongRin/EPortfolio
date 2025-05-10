@@ -256,11 +256,6 @@ void UECombatComponent::MulticastFiring_Implementation(const FVector_NetQuantize
 	}
 }
 
-void UECombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
-{
-
-}
-
 void UECombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 {
 	FVector2D ViewportSize;
