@@ -9,7 +9,8 @@
 #include "Particles/ParticleSystem.h"
 #include "Sound/SoundCue.h"
 #include "Character/Player/EPlayer.h"
-
+#include "Components/DecalComponent.h"
+#include "Materials/MaterialInstanceConstant.h"
 #include "Kismet/GameplayStatics.h"
 
 AEProjectile::AEProjectile()
@@ -33,11 +34,6 @@ AEProjectile::AEProjectile()
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 	ProjectileMovementComponent->bRotationFollowsVelocity = true;
-
-
-	ProjectileMovementComponent->InitialSpeed = 2e+4f;
-	ProjectileMovementComponent->MaxSpeed = 2e+4f;
-
 }
 
 void AEProjectile::BeginPlay()
@@ -69,8 +65,18 @@ void AEProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrim
 		{
 			if (AController* OwnerController = Character->Controller)
 			{
-				UGameplayStatics::ApplyDamage(Player, 20.f, OwnerController, this, UDamageType::StaticClass());
+				UGameplayStatics::ApplyDamage(Player, Damage, OwnerController, this, UDamageType::StaticClass());
 			}
+		}
+	}
+	else
+	{
+		if (HitDecal)
+		{
+			FRotator rotator = Hit.ImpactNormal.Rotation();
+
+			UDecalComponent* decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), HitDecal, FVector(DecalSize), Hit.Location, rotator, 10);
+			decal->SetFadeScreenSize(0);
 		}
 	}
 
@@ -117,5 +123,7 @@ void AEProjectile::Destroyed()
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
 	}
+
+
 }
 

@@ -14,8 +14,7 @@
 #include "LegacyCameraShake.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
-#include "Components/DecalComponent.h"
-#include "Materials/MaterialInstanceConstant.h"
+
 #include "Controller/EPlayerController.h"
 
 AEWeapon::AEWeapon()
@@ -181,12 +180,6 @@ void AEWeapon::Aimimg(bool bAiming)
 	}
 }
 
-void AEWeapon::DrawDecal(const FVector InLocation, const FRotator InRotator)
-{
-	UDecalComponent* Decal = UGameplayStatics::SpawnDecalAtLocation(GetWorld(), HitDecal, FVector(5), InLocation, InRotator, 10);
-	Decal->SetFadeScreenSize(0);
-}
-
 void AEWeapon::Dropped()
 {
 	SetWeaponState(EWeaponState::WS_Dropped);
@@ -277,6 +270,27 @@ void AEWeapon::OnRep_AMMO()
 {
 	OwnerCharacter = OwnerCharacter == nullptr ? Cast<AEPlayer>(GetOwner()) : OwnerCharacter.Get();
 	SetHUDAMMO();
+}
+
+void AEWeapon::SpawnProjectile(const FVector& SpawnLocation, const FRotator& Direction)
+{
+	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
+
+	if (!ProjectileClass || !InstigatorPawn) return;
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = GetOwner();
+	SpawnParams.Instigator = InstigatorPawn;
+	
+	if (UWorld* World = GetWorld())
+	{
+		World->SpawnActor<AEProjectile>(
+			ProjectileClass,
+			SpawnLocation,
+			Direction,
+			SpawnParams
+		);
+	}
 }
 
 void AEWeapon::SetAimData(const FEWeaponAimData& InWeaponAimData)

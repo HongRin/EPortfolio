@@ -128,7 +128,6 @@ private:
 	float CrosshairAimFactor;
 	float CrosshairShootFactor;
 	float HitDistance;
-	float RecoilAngle;
 
 	FVector HitTarget;
 

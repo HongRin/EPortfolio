@@ -18,6 +18,8 @@ UENUM(BlueprintType)
 enum class EWeaponType : uint8
 {
 	WT_Rifle    UMETA(DisplayName = "Rifle"),
+	WT_Shotgun  UMETA(DisplayName = "Shotgun"),
+	WT_Sniper   UMETA(DisplayName = "Sniper"),
 	WT_MAX      UMETA(DisplayName = "Default Max"),
 };
 
@@ -93,6 +95,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = Crosshairs)
 	float CrosshairSpread;
+
+	UPROPERTY(EditDefaultsOnly, Category = Crosshairs)
+	float CrosshairAimSpread;
 
 public :
 	void SetCrosshairTexture(UTexture2D* Center = nullptr, UTexture2D* Left = nullptr, UTexture2D* Right = nullptr, UTexture2D* Top = nullptr, UTexture2D* Bottom = nullptr)

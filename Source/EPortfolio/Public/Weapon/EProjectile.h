@@ -46,5 +46,14 @@ protected :
 	UPROPERTY(EditDefaultsOnly)
 	TObjectPtr<class USoundCue> ImpactSound;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Hit")
+	TObjectPtr<class UMaterialInstanceConstant> HitDecal;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DecalSize;
+
+	UPROPERTY(EditDefaultsOnly)
+	float Damage;
+
 
 };

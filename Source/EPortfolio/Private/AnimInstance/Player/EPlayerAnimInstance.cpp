@@ -124,7 +124,7 @@ void UEPlayerAnimInstance::AimOffset(float DeltaSeconds)
 		TurnInPlace(DeltaSeconds);
 	}
 
-	if (Speed > 0.f || bIsInAir || bIsFiring)
+	if (Speed > 0.f || bIsInAir || bIsFiring || bIsAiming)
 	{
 		StartingAimRotation = FRotator(0.f, OwnerCharacter->GetBaseAimRotation().Yaw, 0.f);
 		AimOffsetYaw = 0.f;

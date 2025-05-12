@@ -26,7 +26,6 @@ public:
 	void SetWeaponState(EWeaponState State);
 	virtual void Fire(const FVector& HitTarget);
 	void Aimimg(bool bAiming);
-	void DrawDecal(const FVector InLocation, const FRotator InRotator);
 	void Dropped();
 	virtual void OnRep_Owner() override;
 	void SetHUDAMMO();
@@ -50,6 +49,7 @@ protected:
 	UFUNCTION()
 	void OnRep_AMMO();
 
+	void SpawnProjectile(const FVector& SpawnLocation, const FRotator& Direction);
 
 private :
 	void SetAimData(const FEWeaponAimData & InWeaponAimData);
@@ -88,9 +88,6 @@ protected :
 	UPROPERTY(EditDefaultsOnly, Category = "Timeline")
 	TObjectPtr<class UTimelineComponent> Timeline;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Hit")
-	TObjectPtr<class UMaterialInstanceConstant> HitDecal;
-
 	UPROPERTY(EditDefaultsOnly, Category = "WeaponData")
 	bool bAutomatic;
 
@@ -107,4 +104,7 @@ protected :
 
 	UPROPERTY(EditDefaultsOnly, Category = "WeaponData")
 	EWeaponType WeaponType;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class AEProjectile> ProjectileClass;
 };

@@ -21,6 +21,12 @@ void AEPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	PlayerHUD = Cast<AEHUD>(GetHUD());
+
+	if (PlayerCameraManager)
+	{
+		PlayerCameraManager->ViewPitchMin = -60;
+		PlayerCameraManager->ViewPitchMax = 60;
+	}
 }
 
 void AEPlayerController::Tick(float DeltaTime)

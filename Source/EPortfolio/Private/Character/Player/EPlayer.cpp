@@ -117,6 +117,7 @@ void AEPlayer::BeginPlay()
 	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
 
 	UpdateHealth();
+
 }
 
 void AEPlayer::Tick(float InDeltaTime)
@@ -147,16 +148,18 @@ void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
 
 		EnhancedInputComponent->BindAction(IAMove    , ETriggerEvent::Triggered, this, &ThisClass::MoveAction    );
-		EnhancedInputComponent->BindAction(IALook    , ETriggerEvent::Triggered,  this, &ThisClass::LookAction    );
+		EnhancedInputComponent->BindAction(IALook    , ETriggerEvent::Triggered,  this, &ThisClass::LookAction   );
 		EnhancedInputComponent->BindAction(IAJump    , ETriggerEvent::Started  , this, &ThisClass::JumpAction    );
 		EnhancedInputComponent->BindAction(IAEquip   , ETriggerEvent::Started  , this, &ThisClass::EquipAction   );
 		EnhancedInputComponent->BindAction(IACrouch  , ETriggerEvent::Started  , this, &ThisClass::CrouchAction  );
 		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Started  , this, &ThisClass::RunAction     );
-		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Completed, this, &ThisClass::RunAction);
+		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Completed, this, &ThisClass::RunAction	 );
 		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Started  , this, &ThisClass::SlowWalkAction);
 		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Completed, this, &ThisClass::SlowWalkAction);
-		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Triggered, this, &ThisClass::AimingAction  );
-		EnhancedInputComponent->BindAction(IAFire    , ETriggerEvent::Triggered, this, &ThisClass::FiringAction  );
+		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Started, this, &ThisClass::AimingAction  );
+		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Completed, this, &ThisClass::AimingAction);
+		EnhancedInputComponent->BindAction(IAFire    , ETriggerEvent::Started, this, &ThisClass::FiringAction    );
+		EnhancedInputComponent->BindAction(IAFire	 , ETriggerEvent::Completed, this, &ThisClass::FiringAction  );
 		EnhancedInputComponent->BindAction(IAReload  , ETriggerEvent::Started  , this, &ThisClass::ReloadAction  );
 	}
 }
@@ -389,8 +392,8 @@ void AEPlayer::LookAction(const FInputActionValue& InputActionValue)
 
 	if (Controller != nullptr)
 	{
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+		AddControllerYawInput(LookAxisVector.X * 0.7);
+		AddControllerPitchInput(LookAxisVector.Y * 0.7);
 	}
 }
 

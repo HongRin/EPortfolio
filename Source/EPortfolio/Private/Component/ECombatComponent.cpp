@@ -16,13 +16,13 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "ELogHelpers.h"
 
 UECombatComponent::UECombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
 	CrosshairBaseFactor = 2;
 	HitDistance = 80000.f;
-	RecoilAngle = 0.75f;
 	bCanFire = true;
 }
 
@@ -160,7 +160,7 @@ void UECombatComponent::SetAiming(bool bIsAiming)
 			EquippedWeapon->Aimimg(bIsAiming);
 		}
 
-		CrosshairAimFactor = bIsAiming  ? -0.75f : 0.f;
+		CrosshairAimFactor = bIsAiming  ? EquippedWeapon->GetWeaponCrosshairData().CrosshairAimSpread : 0.f;
 
 	}
 }
@@ -230,6 +230,7 @@ void UECombatComponent::OnFiring()
 void UECombatComponent::FiringTimerFunction()
 {
 	if (EquippedWeapon == nullptr) return;
+
 	bCanFire = true;
 	if (EquippedWeapon->GetAutomatic() && bFiring)
 	{
@@ -284,7 +285,6 @@ void UECombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 			Start += CrosshairWorldDirection * DistanceToCharacter;
 		}
 
-		CrosshairWorldDirection = UKismetMathLibrary::RandomUnitVectorInConeInDegrees(CrosshairWorldDirection, RecoilAngle);
 
 		FVector End = Start + CrosshairWorldDirection * HitDistance;
 
@@ -363,7 +363,8 @@ void UECombatComponent::SetHUDCrosshairsSpread(float DeltaTime)
 bool UECombatComponent::CanFire()
 {
 	if (EquippedWeapon == nullptr) return false;
-	return !EquippedWeapon->IsAMMOEmpty() || !bCanFire || CombatState != ECombatState::ECS_Unoccupied;
+	return !EquippedWeapon->IsAMMOEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+
 }
 
 void UECombatComponent::OnRep_CarriedAMMO()
@@ -393,11 +394,15 @@ void UECombatComponent::ServerReload_Implementation()
 void UECombatComponent::InitializeCarriedAmmo()
 {
 	CarriedAMMOMap.Emplace(EWeaponType::WT_Rifle, StartingAMMO);
+	CarriedAMMOMap.Emplace(EWeaponType::WT_Shotgun, StartingAMMO);
 }
 
 void UECombatComponent::ReloadHandle()
 {
-	Player->PlayAnimMontage(EquippedWeapon->GetWeaponReloadMontage());
+	if (EquippedWeapon)
+	{
+		Player->PlayAnimMontage(EquippedWeapon->GetWeaponReloadMontage());
+	}
 }
 
 int32 UECombatComponent::AmountToReload()
@@ -428,8 +433,6 @@ void UECombatComponent::FinsishedReload()
 	{
 		OnFiring();
 	}
-
-
 }
 
 void UECombatComponent::OnRep_CombatState()
