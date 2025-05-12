@@ -8,6 +8,18 @@
 #include "EWeapon.generated.h"
 
 
+USTRUCT(BlueprintType)
+struct FPickupMaterialData
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UMaterialInstance> PickupMaterialInstance;
+
+	UPROPERTY(EditAnywhere)
+	int32 MeshElementIndex;
+};
+
 UCLASS()
 class EPORTFOLIO_API AEWeapon : public AActor
 {
@@ -25,7 +37,7 @@ public:
 	void ShowPickupWidget(bool bShowWidget);
 	void SetWeaponState(EWeaponState State);
 	virtual void Fire(const FVector& HitTarget);
-	void Aimimg(bool bAiming);
+	virtual void Aimimg(bool bAiming);
 	void Dropped();
 	virtual void OnRep_Owner() override;
 	void SetHUDAMMO();
@@ -54,7 +66,7 @@ protected:
 private :
 	void SetAimData(const FEWeaponAimData & InWeaponAimData);
 	void SpendAMMO();
-
+	void SetBrightness(float Brightness);
 
 public:
 	FORCEINLINE class USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -107,4 +119,11 @@ protected :
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class AEProjectile> ProjectileClass;
+
+
+	UPROPERTY(EditAnywhere, Category = "Pickup")
+	TArray<FPickupMaterialData> PickupMaterialInstances;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> DynamicPickupMaterialInstances;
 };

@@ -185,6 +185,16 @@ void AEPlayerController::CheckClientReady()
 	}
 }
 
+void AEPlayerController::UpdateSniperScopeHUD(bool bIsAiming)
+{
+	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
+
+	if (PlayerHUD)
+	{
+		PlayerHUD->SetSniperScopeWidgetHUD(bIsAiming);
+	}
+}
+
 void AEPlayerController::ServerCheckClientReady_Implementation()
 {
 	if (AEGameMode* GameMode = Cast<AEGameMode>(UGameplayStatics::GetGameMode(this)))
@@ -277,6 +287,11 @@ void AEPlayerController::HandleMatchHasStarted()
 		if (PlayerHUD->GetCharacterOverlay() == nullptr)
 		{
 			PlayerHUD->AddCharacterOverlay();
+		}
+
+		if (PlayerHUD->GetSniperScopeWidget() == nullptr)
+		{
+			PlayerHUD->AddSniperScopeWidget();
 		}
 
 		if (PlayerHUD->GetAnnouncement())

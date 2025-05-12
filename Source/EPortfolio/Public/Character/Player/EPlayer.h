@@ -166,7 +166,7 @@ protected :
 	TObjectPtr<UCurveFloat> DissolveCurve;
 
 	UPROPERTY(VisibleAnywhere, Category = "Elim")
-	TArray<UMaterialInstanceDynamic*> DynamicDissolveMaterialInstances;
+	TArray<TObjectPtr<UMaterialInstanceDynamic>> DynamicDissolveMaterialInstances;
 
 	UPROPERTY(EditAnywhere, Category = "Elim")
 	TArray<TObjectPtr<UMaterialInstance>> DissolveMaterialInstances;

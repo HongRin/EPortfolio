@@ -62,7 +62,6 @@ void AEWeapon::BeginPlay()
 		AreaSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnBeginOverlap);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::OnEndOverlap);
-
 	}
 
 	if (PickupWidget)
@@ -74,6 +73,20 @@ void AEWeapon::BeginPlay()
 	Timeline->AddInterpFloat(WeaponDatas.AimCurve, timeline);
 	Timeline->SetLooping(false);
 	Timeline->SetPlayRate(WeaponDatas.AimingSpeed);
+
+	if (!PickupMaterialInstances.IsEmpty())
+	{
+		for (int i = 0; i < PickupMaterialInstances.Num(); i++)
+		{
+			DynamicPickupMaterialInstances.Add(UMaterialInstanceDynamic::Create(PickupMaterialInstances[i].PickupMaterialInstance.Get(), this));
+			WeaponMesh->SetMaterial(PickupMaterialInstances[i].MeshElementIndex, DynamicPickupMaterialInstances[i]);
+
+			if (WeaponState == EWeaponState::WS_Initial)
+			{
+				DynamicPickupMaterialInstances[i]->SetScalarParameterValue(TEXT("Brightness"), 1.f);
+			}
+		}
+	}
 
 }
 
@@ -110,6 +123,7 @@ void AEWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		SetBrightness(0.f);
 		break;
 	case EWeaponState::WS_Dropped:
 		if (HasAuthority())
@@ -119,6 +133,7 @@ void AEWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		SetBrightness(1.f);
 		break;
 	}
 }
@@ -251,11 +266,13 @@ void AEWeapon::OnRep_WeaponState()
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		SetBrightness(0.f);
 		break;
 	case EWeaponState::WS_Dropped:
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		SetBrightness(1.f);
 		break;
 	}
 }
@@ -305,6 +322,17 @@ void AEWeapon::SpendAMMO()
 {
 	AMMO = FMath::Clamp(AMMO - 1, 0, MagazineCapacity);
 	SetHUDAMMO();
+}
+
+void AEWeapon::SetBrightness(float Brightness)
+{
+	if (!DynamicPickupMaterialInstances.IsEmpty())
+	{
+		for (int i = 0; i < DynamicPickupMaterialInstances.Num(); i++)
+		{
+			DynamicPickupMaterialInstances[i]->SetScalarParameterValue(TEXT("Brightness"), Brightness);
+		}
+	}
 }
 
 void AEWeapon::AddAMMO(int32 AMMOtoAdd)

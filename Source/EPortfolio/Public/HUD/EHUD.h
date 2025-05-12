@@ -27,16 +27,20 @@ public :
 	void SetCarriedAMMOHUD(int32 AMMO);
 	void SetMatchCountdownHUD(float MatchCountdown);
 	void SetAnnouncementHUD(float Countdown);
+	void SetSniperScopeWidgetHUD(bool bIsAiming);
 
 	void AddAnnouncement();
+	void AddCharacterOverlay();
+	void AddSniperScopeWidget();
+
 	FORCEINLINE class UECharacterOverlayWidget* GetCharacterOverlay() const { return CharacterOverlay.Get(); };
 	FORCEINLINE class UEAnnouncementWidget* GetAnnouncement() { return Announcement.Get(); };
+	FORCEINLINE class UESniperScopeWidget* GetSniperScopeWidget() { return SniperScopeWidget.Get(); };
+
 
 private :
 	void DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread);
 
-public:
-	void AddCharacterOverlay();
 
 protected:
 	FWeaponCrosshairData CrosshairData;
@@ -50,14 +54,17 @@ protected:
 	UPROPERTY()
 	TObjectPtr<class UECharacterOverlayWidget> CharacterOverlay;
 
+	UPROPERTY(EditAnywhere, Category = "Sniper Scope")
+	TSubclassOf<class UUserWidget> SniperScopeWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<class UESniperScopeWidget> SniperScopeWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Announcements")
 	TSubclassOf<UUserWidget> AnnouncementClass;
 
 	UPROPERTY()
 	TObjectPtr<class UEAnnouncementWidget> Announcement;
-
-
 
 public:
 	FORCEINLINE void SetCrosshairData(const FWeaponCrosshairData & InWeaponCrossHairData)

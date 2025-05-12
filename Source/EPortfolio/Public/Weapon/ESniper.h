@@ -16,5 +16,5 @@ class EPORTFOLIO_API AESniper : public AEWeapon
 	
 public:
 	virtual void Fire(const FVector& HitTarget);
-
+	virtual void Aimimg(bool bAiming);
 };

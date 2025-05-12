@@ -33,6 +33,7 @@ public:
 	void UpdateCarriedAMMOHUD(int32 AMMO);
 	void UpdateMatchCountdownHUD(float CountdownTime);
 	void UpdateAnnouncementHUD(float CountdownTime);
+	void UpdateSniperScopeHUD(bool bIsAiming);
 	void OnMatchStateSet(FName State);
 	void InitializeMatchState();
 	void CheckClientReady();
@@ -92,7 +93,4 @@ private:
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDefeats;
-
-	int PrevTest = 0;
-	int Test = 0;
 };

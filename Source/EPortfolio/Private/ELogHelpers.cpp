@@ -4,7 +4,7 @@
 #include "ELogHelpers.h"
 #include "GameFramework/Actor.h"
 
-void ELogHelpers::Print(AActor* InActor, FString PrintStr)
+void ELogHelpers::PrintNet(AActor* InActor, FString PrintStr)
 {
 	if (GEngine)
 	{
@@ -37,6 +37,29 @@ void ELogHelpers::Print(AActor* InActor, FString PrintStr)
 
 		str.Append(PrintStr);
 
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Emerald, str);
+	}
+}
+
+void ELogHelpers::PrintIsValid(UObject* InObj, const WIDECHAR* InName)
+{
+	FString str;
+
+	str.Append(FString(InName));
+
+	if (InObj)
+	{
+		str.Append(FString("is Valid"));
+		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Blue, str);
+	}
+	else
+	{
+		str.Append(FString("is Not Valid"));
 		GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Red, str);
 	}
+}
+
+void ELogHelpers::PrintFunctionCall()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString::Printf(TEXT("%s Call"), __FUNCTION__));
 }

@@ -160,8 +160,16 @@ void UECombatComponent::SetAiming(bool bIsAiming)
 			EquippedWeapon->Aimimg(bIsAiming);
 		}
 
-		CrosshairAimFactor = bIsAiming  ? EquippedWeapon->GetWeaponCrosshairData().CrosshairAimSpread : 0.f;
-
+		if (bIsAiming)
+		{
+			CrosshairAimFactor = EquippedWeapon->GetWeaponCrosshairData().CrosshairAimSpread;
+			SetAimMouseSensitivity();
+		}
+		else
+		{
+			CrosshairAimFactor = 0.f;
+			MouseSensitivity = 1.f;
+		}
 	}
 }
 
@@ -467,6 +475,16 @@ void UECombatComponent::UpdateAMMOValues()
 		Controller->UpdateCarriedAMMOHUD(CarriedAMMO);
 	}
 	EquippedWeapon->AddAMMO(ReloadAmount);
+}
+
+void UECombatComponent::SetAimMouseSensitivity()
+{
+	switch (EquippedWeapon->GetWeaponType())
+	{
+		case EWeaponType::WT_Rifle:    MouseSensitivity = 0.5f; break;
+		case EWeaponType::WT_Shotgun:  MouseSensitivity = 0.7f; break;
+		case EWeaponType::WT_Sniper:   MouseSensitivity = 0.1f; break;
+	}
 }
 
 

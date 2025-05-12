@@ -225,10 +225,16 @@ void AEPlayer::MulticastElim_Implementation()
 	if (EPlayerController)
 	{
 		EPlayerController->UpdateAMMOHUD(0);
+		EPlayerController->UpdateSniperScopeHUD(false);
 	}
 
 	bElimmed = true;
 	PlayAnimMontage(ElimMontage);
+
+	if (CombatComponent)
+	{
+		CombatComponent->bFiring = false;
+	}
 
 	if (!DissolveMaterialInstances.IsEmpty())
 	{
@@ -317,6 +323,7 @@ void AEPlayer::Elim()
 	{
 		CombatComponent->EquippedWeapon->Dropped();
 	}
+	CombatComponent->MouseSensitivity = 1.f;
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(
 		ElimTimer,
@@ -390,10 +397,10 @@ void AEPlayer::LookAction(const FInputActionValue& InputActionValue)
 {
 	FVector2D LookAxisVector = InputActionValue.Get<FVector2D>();
 
-	if (Controller != nullptr)
+	if (Controller != nullptr && CombatComponent != nullptr)
 	{
-		AddControllerYawInput(LookAxisVector.X * 0.7);
-		AddControllerPitchInput(LookAxisVector.Y * 0.7);
+		AddControllerYawInput(LookAxisVector.X * CombatComponent->MouseSensitivity);
+		AddControllerPitchInput(LookAxisVector.Y * CombatComponent->MouseSensitivity);
 	}
 }
 

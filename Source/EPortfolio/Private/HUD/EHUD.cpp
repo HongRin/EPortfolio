@@ -5,6 +5,7 @@
 #include "Controller/EPlayerController.h"
 #include "HUD/ECharacterOverlayWidget.h"
 #include "HUD/EAnnouncementWidget.h"
+#include "HUD/ESniperScopeWidget.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 
@@ -138,6 +139,16 @@ void AEHUD::SetAnnouncementHUD(float Countdown)
 	}
 }
 
+void AEHUD::SetSniperScopeWidgetHUD(bool bIsAiming)
+{
+	ELogHelpers::PrintIsValid(SniperScopeWidget, TEXT("SniperScopeWidget"));
+	
+	if (SniperScopeWidget)
+	{
+		SniperScopeWidget->PlayZoomIn(bIsAiming);
+	}
+}
+
 void AEHUD::AddAnnouncement()
 {
 	APlayerController* PlayerController = GetOwningPlayerController();
@@ -181,6 +192,17 @@ void AEHUD::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UECharacterOverlayWidget>(PlayerController, CharacterOverlayClass);
 		CharacterOverlay->AddToViewport();
+	}
+}
+
+void AEHUD::AddSniperScopeWidget()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+
+	if (PlayerController && SniperScopeWidgetClass)
+	{
+		SniperScopeWidget = CreateWidget<UESniperScopeWidget>(PlayerController, SniperScopeWidgetClass);
+		SniperScopeWidget->AddToViewport(-10);
 	}
 }
 

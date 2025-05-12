@@ -7,6 +7,8 @@
 class EPORTFOLIO_API ELogHelpers
 {
 public :
-	static void Print(AActor* InActor, FString PrintStr = FString());
+	static void PrintNet(AActor* InActor, FString PrintStr = FString());
+	static void PrintIsValid(UObject* InObj, const WIDECHAR* InName);
+	static void PrintFunctionCall();
 
 };

@@ -96,6 +96,8 @@ private :
 
 	void UpdateAMMOValues();
 
+	void SetAimMouseSensitivity();
+
 protected :
 	UPROPERTY(EditDefaultsOnly, Category = "AnimLayer")
 	TSubclassOf<class UEPlayerLinkedAnimLayer> UnarmedAnimLayer;
@@ -150,4 +152,6 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState;
+
+	float MouseSensitivity = 1.0f;
 };
