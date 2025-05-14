@@ -78,7 +78,7 @@ private :
 	bool CanFire();
 
 	UFUNCTION()
-	void OnRep_CarriedAMMO();
+	void OnRep_CarriedAmmo();
 
 	void Reload();
 
@@ -94,7 +94,7 @@ private :
 	UFUNCTION()
 	void OnRep_CombatState();
 
-	void UpdateAMMOValues();
+	void UpdateAmmoValues();
 
 	void SetAimMouseSensitivity();
 
@@ -142,13 +142,13 @@ private:
 	FTimerHandle FireTimer;
 	bool bCanFire;
 
-	UPROPERTY(ReplicatedUsing = OnRep_CarriedAMMO)
-	int32 CarriedAMMO;
+	UPROPERTY(ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 CarriedAmmo;
 
-	TMap<EWeaponType, int32> CarriedAMMOMap;
+	TMap<EWeaponType, int32> CarriedAmmoMap;
 
 	UPROPERTY(EditDefaultsOnly)
-	int32 StartingAMMO = 1000;
+	int32 StartingAmmo = 1000;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState;

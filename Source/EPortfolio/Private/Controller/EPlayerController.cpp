@@ -13,8 +13,13 @@
 #include "Components/TextBlock.h"
 #include "Game/EGameState.h"
 
-#include "Game/ELobbyGameMode.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
+
+#include "HUD/ESystemMenuWidget.h"
+
 #include "ELogHelpers.h"
+
 
 void AEPlayerController::BeginPlay()
 {
@@ -119,23 +124,23 @@ void AEPlayerController::UpdateDeathScoreHUD(int32 Score)
 	}
 }
 
-void AEPlayerController::UpdateAMMOHUD(int32 AMMO)
+void AEPlayerController::UpdateAmmoHUD(int32 Ammo)
 {
 	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
 
 	if (PlayerHUD)
 	{
-		PlayerHUD->SetAMMOHUD(AMMO);
+		PlayerHUD->SetAmmoHUD(Ammo);
 	}
 }
 
-void AEPlayerController::UpdateCarriedAMMOHUD(int32 AMMO)
+void AEPlayerController::UpdateCarriedAmmoHUD(int32 Ammo)
 {
 	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
 
 	if (PlayerHUD)
 	{
-		PlayerHUD->SetCarriedAMMOHUD(AMMO);
+		PlayerHUD->SetCarriedAmmoHUD(Ammo);
 	}
 }
 
@@ -184,6 +189,7 @@ void AEPlayerController::CheckClientReady()
 		ServerCheckClientReady();
 	}
 }
+
 
 void AEPlayerController::UpdateSniperScopeHUD(bool bIsAiming)
 {
@@ -306,7 +312,11 @@ void AEPlayerController::HandleCooldown()
 
 	if (PlayerHUD)
 	{
-		PlayerHUD->GetCharacterOverlay()->RemoveFromParent();
+		if (PlayerHUD->GetCharacterOverlay())
+		{
+			PlayerHUD->GetCharacterOverlay()->RemoveFromParent();
+		}
+			
 		if (PlayerHUD->GetAnnouncement())
 		{
 			PlayerHUD->GetAnnouncement()->SetVisibility(ESlateVisibility::Visible);
@@ -331,7 +341,7 @@ void AEPlayerController::HandleCooldown()
 				}
 				else if (TopPlayers.Num() == 1)
 				{
-					InfoTextString = FString::Printf(TEXT("Winner \n%s"), *TopPlayers[0]->GetPlayerName());
+					InfoTextString = FString::Printf(TEXT("%s is winner"), *TopPlayers[0]->GetPlayerName());
 				}
 				else if (TopPlayers.Num() > 1)
 				{
@@ -375,5 +385,25 @@ void AEPlayerController::ClientJoinMidgame_Implementation(FName StateOfMatch, fl
 	if (PlayerHUD && (MatchState == MatchState::WaitingToStart || MatchState == MatchState::EnteringMap))
 	{
 		PlayerHUD->AddAnnouncement();
+	}
+}
+
+
+void AEPlayerController::ToggleSystemMenu()
+{
+	if (SystemMenuWidgetClass == nullptr) return;
+	
+	if (SystemMenu == nullptr)
+	{
+		SystemMenu = CreateWidget<UESystemMenuWidget>(this, SystemMenuWidgetClass);
+	}
+	
+	if (!SystemMenu->bShowSystemMenu)
+	{
+		SystemMenu->MenuSetup();
+	}
+	else
+	{
+		SystemMenu->MenuTearDown();
 	}
 }

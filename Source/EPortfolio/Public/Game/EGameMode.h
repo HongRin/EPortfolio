@@ -23,7 +23,7 @@ public:
 
 	virtual void PlayerEliminated(class AEPlayer* ElimmedCharacter, class AEPlayerController* VictimController, AEPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* ElimmedCharacter, AController* ElimmedController);
-
+	virtual void HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer) override;
 protected:
 	virtual void BeginPlay() override;
 	virtual void OnMatchStateSet() override;

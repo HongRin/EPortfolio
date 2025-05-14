@@ -29,6 +29,7 @@ UECombatComponent::UECombatComponent()
 void UECombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
 	ItemAnimLayer = UnarmedAnimLayer;
 
 	if (Player)
@@ -60,7 +61,7 @@ void UECombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(UECombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UECombatComponent, ItemAnimLayer);
 	DOREPLIFETIME(UECombatComponent, bFiring);
-	DOREPLIFETIME_CONDITION(UECombatComponent, CarriedAMMO, COND_OwnerOnly);
+	DOREPLIFETIME_CONDITION(UECombatComponent, CarriedAmmo, COND_OwnerOnly);
 	DOREPLIFETIME(UECombatComponent, CombatState);
 
 }
@@ -83,15 +84,15 @@ void UECombatComponent::EquipWeapon(AEWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(Player);
 	
-	EquippedWeapon->SetHUDAMMO();
+	EquippedWeapon->SetHUDAmmo();
 	EquippedWeapon->ShowPickupWidget(false);
 
-	if (CarriedAMMOMap.Contains(EquippedWeapon->GetWeaponType()))
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAMMO = CarriedAMMOMap[EquippedWeapon->GetWeaponType()];
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 
-	if (EquippedWeapon->IsAMMOEmpty())
+	if (EquippedWeapon->IsAmmoEmpty())
 	{
 		Reload();
 	}
@@ -99,7 +100,7 @@ void UECombatComponent::EquipWeapon(AEWeapon* WeaponToEquip)
 	Controller = Controller == nullptr ? Cast<AEPlayerController>(Player->Controller) : Controller.Get();
 	if (Controller)
 	{
-		Controller->UpdateCarriedAMMOHUD(CarriedAMMO);
+		Controller->UpdateCarriedAmmoHUD(CarriedAmmo);
 	}
 }
 
@@ -245,7 +246,7 @@ void UECombatComponent::FiringTimerFunction()
 		OnFiring();
 	}
 
-	if (EquippedWeapon->IsAMMOEmpty())
+	if (EquippedWeapon->IsAmmoEmpty())
 	{
 		Reload();
 	}
@@ -321,9 +322,9 @@ void UECombatComponent::SetHUDCrosshairsSpread(float DeltaTime)
 	if (Player == nullptr || Player->Controller == nullptr) return;
 
 	Controller = (Controller == nullptr) ? Cast<AEPlayerController>(Player->Controller) : Controller.Get();
-	HUD = (HUD == nullptr) ? Cast<AEHUD>(Controller->GetHUD()) : HUD.Get();
 	if (Controller)
 	{
+		HUD = (HUD == nullptr) ? Cast<AEHUD>(Controller->GetHUD()) : HUD.Get();
 		if (HUD)
 		{
 			FWeaponCrosshairData CrossHairData;
@@ -371,22 +372,22 @@ void UECombatComponent::SetHUDCrosshairsSpread(float DeltaTime)
 bool UECombatComponent::CanFire()
 {
 	if (EquippedWeapon == nullptr) return false;
-	return !EquippedWeapon->IsAMMOEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
+	return !EquippedWeapon->IsAmmoEmpty() && bCanFire && CombatState == ECombatState::ECS_Unoccupied;
 
 }
 
-void UECombatComponent::OnRep_CarriedAMMO()
+void UECombatComponent::OnRep_CarriedAmmo()
 {
 	Controller = Controller == nullptr ? Cast<AEPlayerController>(Player->Controller) : Controller.Get();
 	if (Controller)
 	{
-		Controller->UpdateCarriedAMMOHUD(CarriedAMMO);
+		Controller->UpdateCarriedAmmoHUD(CarriedAmmo);
 	}
 }
 
 void UECombatComponent::Reload()
 {
-	if (CarriedAMMO > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon->GetAMMO() != EquippedWeapon->GetMagazineCapacity())
+	if (CarriedAmmo > 0 && CombatState == ECombatState::ECS_Unoccupied && EquippedWeapon->GetAmmo() != EquippedWeapon->GetMagazineCapacity())
 	{
 		ServerReload();
 	}
@@ -401,8 +402,9 @@ void UECombatComponent::ServerReload_Implementation()
 
 void UECombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAMMOMap.Emplace(EWeaponType::WT_Rifle, StartingAMMO);
-	CarriedAMMOMap.Emplace(EWeaponType::WT_Shotgun, StartingAMMO);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Rifle, StartingAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Shotgun, StartingAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Rifle, StartingAmmo);
 }
 
 void UECombatComponent::ReloadHandle()
@@ -416,11 +418,11 @@ void UECombatComponent::ReloadHandle()
 int32 UECombatComponent::AmountToReload()
 {
 	if (EquippedWeapon == nullptr) return 0;
-	int32 RoomInMag = EquippedWeapon->GetMagazineCapacity() - EquippedWeapon->GetAMMO();
+	int32 RoomInMag = EquippedWeapon->GetMagazineCapacity() - EquippedWeapon->GetAmmo();
 
-	if (CarriedAMMOMap.Contains(EquippedWeapon->GetWeaponType()))
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		int32 AmountCarried = CarriedAMMOMap[EquippedWeapon->GetWeaponType()];
+		int32 AmountCarried = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 		int32 Least = FMath::Min(RoomInMag, AmountCarried);
 		return FMath::Clamp(RoomInMag, 0, Least);
 	}
@@ -434,7 +436,7 @@ void UECombatComponent::FinsishedReload()
 	if (Player->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
-		UpdateAMMOValues();
+		UpdateAmmoValues();
 	}
 
 	if (bFiring)
@@ -460,21 +462,21 @@ void UECombatComponent::OnRep_CombatState()
 	}
 }
 
-void UECombatComponent::UpdateAMMOValues()
+void UECombatComponent::UpdateAmmoValues()
 {
 	if (Player == nullptr || EquippedWeapon == nullptr) return;
 	int32 ReloadAmount = AmountToReload();
-	if (CarriedAMMOMap.Contains(EquippedWeapon->GetWeaponType()))
+	if (CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
-		CarriedAMMOMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
-		CarriedAMMO = CarriedAMMOMap[EquippedWeapon->GetWeaponType()];
+		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
+		CarriedAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 	}
 	Controller = Controller == nullptr ? Cast<AEPlayerController>(Player->Controller) : Controller.Get();
 	if (Controller)
 	{
-		Controller->UpdateCarriedAMMOHUD(CarriedAMMO);
+		Controller->UpdateCarriedAmmoHUD(CarriedAmmo);
 	}
-	EquippedWeapon->AddAMMO(ReloadAmount);
+	EquippedWeapon->AddAmmo(ReloadAmount);
 }
 
 void UECombatComponent::SetAimMouseSensitivity()

@@ -101,7 +101,7 @@ void AEWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AEWeapon, WeaponState);
-	DOREPLIFETIME(AEWeapon, AMMO);
+	DOREPLIFETIME(AEWeapon, Ammo);
 }
 
 void AEWeapon::ShowPickupWidget(bool bShowWidget)
@@ -178,7 +178,7 @@ void AEWeapon::Fire(const FVector& HitTarget)
 		Player->AddControllerPitchInput(-WeaponDatas.RecoilRate * UKismetMathLibrary::RandomFloatInRange(0.8f, 1.2f));
 	}
 
-	SpendAMMO();
+	SpendAmmo();
 }
 
 void AEWeapon::Aimimg(bool bAiming)
@@ -216,11 +216,11 @@ void AEWeapon::OnRep_Owner()
 	}
 	else
 	{
-		SetHUDAMMO();
+		SetHUDAmmo();
 	}
 }
 
-void AEWeapon::SetHUDAMMO()
+void AEWeapon::SetHUDAmmo()
 {
 	OwnerCharacter = OwnerCharacter == nullptr ? Cast<AEPlayer>(GetOwner()) : OwnerCharacter.Get();
 	if (OwnerCharacter)
@@ -228,14 +228,14 @@ void AEWeapon::SetHUDAMMO()
 		OwnerController = OwnerController == nullptr ? Cast<AEPlayerController>(OwnerCharacter->Controller) : OwnerController.Get();
 		if (OwnerController)
 		{
-			OwnerController->UpdateAMMOHUD(AMMO);
+			OwnerController->UpdateAmmoHUD(Ammo);
 		}
 	}
 }
 
-bool AEWeapon::IsAMMOEmpty()
+bool AEWeapon::IsAmmoEmpty()
 {
-	return AMMO <= 0;
+	return Ammo <= 0;
 }
 
 void AEWeapon::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -283,10 +283,10 @@ void AEWeapon::OnAiming(float Output)
 	Cast<AEPlayer>(GetOwner())->GetFollowCamera()->SetFieldOfView(FOV);
 }
 
-void AEWeapon::OnRep_AMMO()
+void AEWeapon::OnRep_Ammo()
 {
 	OwnerCharacter = OwnerCharacter == nullptr ? Cast<AEPlayer>(GetOwner()) : OwnerCharacter.Get();
-	SetHUDAMMO();
+	SetHUDAmmo();
 }
 
 void AEWeapon::SpawnProjectile(const FVector& SpawnLocation, const FRotator& Direction)
@@ -318,10 +318,10 @@ void AEWeapon::SetAimData(const FEWeaponAimData& InWeaponAimData)
 	SpringArm->bEnableCameraLag = InWeaponAimData.bEnableCameraLag;
 }
 
-void AEWeapon::SpendAMMO()
+void AEWeapon::SpendAmmo()
 {
-	AMMO = FMath::Clamp(AMMO - 1, 0, MagazineCapacity);
-	SetHUDAMMO();
+	Ammo = FMath::Clamp(Ammo - 1, 0, MagazineCapacity);
+	SetHUDAmmo();
 }
 
 void AEWeapon::SetBrightness(float Brightness)
@@ -335,10 +335,10 @@ void AEWeapon::SetBrightness(float Brightness)
 	}
 }
 
-void AEWeapon::AddAMMO(int32 AMMOtoAdd)
+void AEWeapon::AddAmmo(int32 AmmotoAdd)
 {
-	AMMO = FMath::Clamp(AMMO + AMMOtoAdd, 0, MagazineCapacity);
-	SetHUDAMMO();
+	Ammo = FMath::Clamp(Ammo + AmmotoAdd, 0, MagazineCapacity);
+	SetHUDAmmo();
 }
 
 void AEWeapon::Reload()

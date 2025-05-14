@@ -59,7 +59,7 @@ void ELogHelpers::PrintIsValid(UObject* InObj, const WIDECHAR* InName)
 	}
 }
 
-void ELogHelpers::PrintFunctionCall()
+void ELogHelpers::Print(const WIDECHAR* str)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString::Printf(TEXT("%s Call"), __FUNCTION__));
+	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(str));
 }

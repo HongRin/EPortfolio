@@ -3,15 +3,35 @@
 
 #include "Game/ELobbyGameMode.h"
 #include "GameFramework/GameStateBase.h"
+#include "Game/ELobbyGameState.h"
+#include "Controller/EPlayerController.h"
 
 void AELobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
 	Super::PostLogin(NewPlayer);
-	int32 NumberOfPlayers = GameState.Get()->PlayerArray.Num();
-	if (NumberOfPlayers == 2)
+
+	if (AELobbyGameState* LobbyGameState = GetGameState<AELobbyGameState>())
 	{
-		UWorld* World = GetWorld();
-		if (World)
+		LobbyGameState->UpdatePlayerCount(1);
+	}
+
+}
+
+void AELobbyGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+
+	if (AELobbyGameState* LobbyGameState = GetGameState<AELobbyGameState>())
+	{
+		LobbyGameState->UpdatePlayerCount(-1);
+	}
+}
+
+void AELobbyGameMode::StartGame()
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (GameState.Get()->PlayerArray.Num() >= 2)
 		{
 			bUseSeamlessTravel = true;
 			World->ServerTravel(FString("/Game/Levels/Shooter?listen"));

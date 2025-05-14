@@ -8,8 +8,8 @@
 #include "EMultiplayerSessionsSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
-DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
-DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
+DECLARE_MULTICAST_DELEGATE_ThreeParams(FMultiplayerOnFindSessionsComplete, const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful, FName ServerKey);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnJoinSessionComplete, FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
 
@@ -25,13 +25,15 @@ public:
 	UEMultiplayerSessionsSubsystem();
 
 public :
-	void CreateSession(int32 NumPublicConnections, FString MatchType);
+	void CreateSession(int32 NumPublicConnections, FString ServerName);
 	void FindSessions(int32 MaxSearchResults);
-	void JoinSession(const FOnlineSessionSearchResult& SessionResult);
+	void JoinSession(uint32 Index);
 	void DestroySession();
 	void StartSession();
 
 	bool IsValidSessionInterface();
+
+	int32 GetPlayerCount();
 
 protected:
 	void OnCreateSessionComplete (FName SessionName, bool bWasSuccessful);
@@ -67,5 +69,5 @@ private:
 private:
 	bool bCreateSessionOnDestroy{ false };
 	int32 LastNumPublicConnections;
-	FString LastMatchType;
+	FString DesiredServerName;
 };

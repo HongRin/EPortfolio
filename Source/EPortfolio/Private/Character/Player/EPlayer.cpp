@@ -49,11 +49,6 @@ AEPlayer::AEPlayer()
 	}
 
 	{
-		OverheadWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("OverheadWidget"));
-		OverheadWidget->SetupAttachment(RootComponent);
-	}
-
-	{
 		CombatComponent = CreateDefaultSubobject<UECombatComponent>(TEXT("CombatComponent"));
 		CombatComponent->SetIsReplicated(true);
 	}
@@ -69,22 +64,21 @@ AEPlayer::AEPlayer()
 	}
 
 	{
-		RunSpeed      = 600.f;
-		WalkSpeed     = 400.f;
-		CrouchSpeed   = 330.f;
-		SlowWalkSpeed = 250.f;
+		RunSpeed        = 600.f;
+		WalkSpeed       = 400.f;
+		CrouchSpeed     = 330.f;
+		SlowWalkSpeed   = 250.f;
 	}
 
 	{
-		GetCharacterMovement()->bOrientRotationToMovement = true;
 		GetCharacterMovement()->bWantsToCrouch = true;
 		GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 		GetCharacterMovement()->MaxWalkSpeedCrouched = CrouchSpeed;
+		GetCharacterMovement()->CrouchedHalfHeight = 60.f;
 	}
 
 	{
-		GetMesh()->SetIsReplicated(true);
 		GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 		GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
@@ -97,9 +91,8 @@ void AEPlayer::BeginPlay()
 	Super::BeginPlay();
 
 	check(IMCPlayer);
-	APlayerController* PlayerController = Cast<AEPlayerController>(Controller);
 
-	if (PlayerController)
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer());
 
@@ -113,8 +106,6 @@ void AEPlayer::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &AEPlayer::ReceiveDamage);
 	}
-
-	Cast<UEOverheadWidget>(OverheadWidget->GetUserWidgetObject())->ShowPlayerName(this);
 
 	UpdateHealth();
 
@@ -131,9 +122,8 @@ void AEPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	check(IMCPlayer);
-	APlayerController* PlayerController = Cast<AEPlayerController>(Controller);
 
-	if (PlayerController)
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -145,22 +135,23 @@ void AEPlayer::PossessedBy(AController* NewController)
 
 void AEPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) {
-
-		EnhancedInputComponent->BindAction(IAMove    , ETriggerEvent::Triggered, this, &ThisClass::MoveAction    );
-		EnhancedInputComponent->BindAction(IALook    , ETriggerEvent::Triggered,  this, &ThisClass::LookAction   );
-		EnhancedInputComponent->BindAction(IAJump    , ETriggerEvent::Started  , this, &ThisClass::JumpAction    );
-		EnhancedInputComponent->BindAction(IAEquip   , ETriggerEvent::Started  , this, &ThisClass::EquipAction   );
-		EnhancedInputComponent->BindAction(IACrouch  , ETriggerEvent::Started  , this, &ThisClass::CrouchAction  );
-		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Started  , this, &ThisClass::RunAction     );
-		EnhancedInputComponent->BindAction(IARun     , ETriggerEvent::Completed, this, &ThisClass::RunAction	 );
-		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Started  , this, &ThisClass::SlowWalkAction);
-		EnhancedInputComponent->BindAction(IASlowWalk, ETriggerEvent::Completed, this, &ThisClass::SlowWalkAction);
-		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Started, this, &ThisClass::AimingAction  );
-		EnhancedInputComponent->BindAction(IAAiming  , ETriggerEvent::Completed, this, &ThisClass::AimingAction);
-		EnhancedInputComponent->BindAction(IAFire    , ETriggerEvent::Started, this, &ThisClass::FiringAction    );
-		EnhancedInputComponent->BindAction(IAFire	 , ETriggerEvent::Completed, this, &ThisClass::FiringAction  );
-		EnhancedInputComponent->BindAction(IAReload  , ETriggerEvent::Started  , this, &ThisClass::ReloadAction  );
+	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent)) 
+	{
+		EnhancedInputComponent->BindAction(IAMove      , ETriggerEvent::Triggered, this, &ThisClass::MoveAction      );
+		EnhancedInputComponent->BindAction(IALook      , ETriggerEvent::Triggered, this, &ThisClass::LookAction      );
+		EnhancedInputComponent->BindAction(IAJump      , ETriggerEvent::Started  , this, &ThisClass::JumpAction      );
+		EnhancedInputComponent->BindAction(IAEquip     , ETriggerEvent::Started  , this, &ThisClass::EquipAction     );
+		EnhancedInputComponent->BindAction(IACrouch    , ETriggerEvent::Started  , this, &ThisClass::CrouchAction    );
+		EnhancedInputComponent->BindAction(IARun       , ETriggerEvent::Started  , this, &ThisClass::RunAction       );
+		EnhancedInputComponent->BindAction(IARun       , ETriggerEvent::Completed, this, &ThisClass::RunAction	     );
+		EnhancedInputComponent->BindAction(IASlowWalk  , ETriggerEvent::Started  , this, &ThisClass::SlowWalkAction  );
+		EnhancedInputComponent->BindAction(IASlowWalk  , ETriggerEvent::Completed, this, &ThisClass::SlowWalkAction  );
+		EnhancedInputComponent->BindAction(IAAiming    , ETriggerEvent::Started  , this, &ThisClass::AimingAction    );
+		EnhancedInputComponent->BindAction(IAAiming    , ETriggerEvent::Completed, this, &ThisClass::AimingAction    );
+		EnhancedInputComponent->BindAction(IAFire      , ETriggerEvent::Started  , this, &ThisClass::FiringAction    );
+		EnhancedInputComponent->BindAction(IAFire	   , ETriggerEvent::Completed, this, &ThisClass::FiringAction    );
+		EnhancedInputComponent->BindAction(IAReload    , ETriggerEvent::Started  , this, &ThisClass::ReloadAction    );
+		EnhancedInputComponent->BindAction(IASystemMenu, ETriggerEvent::Started  , this, &ThisClass::SystemMenuAction);
 	}
 }
 
@@ -168,7 +159,6 @@ void AEPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(AEPlayer, OverlappingWeapon, COND_OwnerOnly);
-	DOREPLIFETIME(AEPlayer, MovementVector);
 	DOREPLIFETIME(AEPlayer, Health);
 }
 
@@ -180,7 +170,6 @@ void AEPlayer::PostInitializeComponents()
 		CombatComponent->Player = this;
 	}
 }
-
 
 void AEPlayer::OnRep_OverlappingWeapon(AEWeapon* LastWeapon)
 {
@@ -199,12 +188,25 @@ void AEPlayer::OnRep_Health()
 	UpdateHealth();
 }
 
+
+
 void AEPlayer::ServerEquip_Implementation()
 {
 	if (CombatComponent)
 	{
 		CombatComponent->EquipWeapon(OverlappingWeapon);
 	}
+}
+
+void AEPlayer::SetMaxSpeed(float MaxSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
+	ServerSetMaxSpeed(MaxSpeed);
+}
+
+void AEPlayer::MulticastSetMaxSpeed_Implementation(float MaxSpeed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
 }
 
 void AEPlayer::ServerSetMaxSpeed_Implementation(float MaxSpeed)
@@ -222,11 +224,6 @@ void AEPlayer::MulticastHit_Implementation(FVector2D Direction)
 
 void AEPlayer::MulticastElim_Implementation()
 {
-	if (EPlayerController)
-	{
-		EPlayerController->UpdateAMMOHUD(0);
-		EPlayerController->UpdateSniperScopeHUD(false);
-	}
 
 	bElimmed = true;
 	PlayAnimMontage(ElimMontage);
@@ -235,6 +232,7 @@ void AEPlayer::MulticastElim_Implementation()
 	{
 		CombatComponent->bFiring = false;
 	}
+
 
 	if (!DissolveMaterialInstances.IsEmpty())
 	{
@@ -254,6 +252,15 @@ void AEPlayer::MulticastElim_Implementation()
 	if (EPlayerController)
 	{
 		DisableInput(EPlayerController);
+		EPlayerController->UpdateAmmoHUD(0);
+
+		if (CombatComponent && CombatComponent->EquippedWeapon)
+		{
+			if (CombatComponent->EquippedWeapon->GetWeaponType() == EWeaponType::WT_Sniper)
+			{
+				EPlayerController->UpdateSniperScopeHUD(false);
+			}
+		}
 	}
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -276,10 +283,7 @@ void AEPlayer::SetOverlappingWeapon(AEWeapon* Weapon)
 	}
 }
 
-void AEPlayer::MulticastSetMaxSpeed_Implementation(float MaxSpeed)
-{
-	GetCharacterMovement()->MaxWalkSpeed = MaxSpeed;
-}
+
 
 void AEPlayer::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatorController, AActor* DamageCauser)
 {
@@ -306,14 +310,6 @@ void AEPlayer::UpdateHealth()
 	if (EPlayerController)
 	{
 		EPlayerController->UpdateHealthHUD(Health, MaxHealth);
-	}
-}
-
-void AEPlayer::MulticastDodge_Implementation()
-{
-	if (CombatComponent)
-	{
-		CombatComponent->PlayDodgeMontage(MovementVector);
 	}
 }
 
@@ -377,20 +373,15 @@ void AEPlayer::PollInit()
 
 void AEPlayer::MoveAction(const FInputActionValue& InputActionValue)
 {
-	MovementVector = InputActionValue.Get<FVector2D>();
+	const FRotator Rotation = GetControlRotation();
 
-	if (Controller != nullptr)
-	{
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+	FVector RightDirection = UKismetMathLibrary::GetRightVector(FRotator(0.f, Rotation.Yaw, Rotation.Roll));
 
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+	AddMovementInput(RightDirection, InputActionValue.Get<FVector2D>().X);
 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+	FVector ForwardDirection = UKismetMathLibrary::GetForwardVector(FRotator(0.f, Rotation.Yaw, 0.f));
 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
-	}
+	AddMovementInput(ForwardDirection, InputActionValue.Get<FVector2D>().Y);
 }
 
 void AEPlayer::LookAction(const FInputActionValue& InputActionValue)
@@ -453,11 +444,11 @@ void AEPlayer::RunAction(const FInputActionValue& InputActionValue)
 
 	if (InputActionValue.Get<bool>())
 	{
-		ServerSetMaxSpeed(RunSpeed);
+		SetMaxSpeed(RunSpeed);
 	}
 	else
 	{
-		ServerSetMaxSpeed(WalkSpeed);
+		SetMaxSpeed(WalkSpeed);
 	}
 }
 
@@ -465,11 +456,11 @@ void AEPlayer::SlowWalkAction(const FInputActionValue& InputActionValue)
 {
 	if (InputActionValue.Get<bool>())
 	{
-		ServerSetMaxSpeed(SlowWalkSpeed);
+		SetMaxSpeed(SlowWalkSpeed);
 	}
 	else
 	{
-		ServerSetMaxSpeed(WalkSpeed);
+		SetMaxSpeed(WalkSpeed);
 	}
 }
 
@@ -479,7 +470,7 @@ void AEPlayer::AimingAction(const FInputActionValue& InputActionValue)
 	
 	if (InputActionValue.Get<bool>())
 	{
-		ServerSetMaxSpeed(WalkSpeed);
+		SetMaxSpeed(WalkSpeed);
 	}
 }
 
@@ -489,11 +480,7 @@ void AEPlayer::FiringAction(const FInputActionValue& InputActionValue)
 	
 	CombatComponent->Firing(InputActionValue.Get<bool>());
 
-	ServerSetMaxSpeed(WalkSpeed);
-}
-
-void AEPlayer::DodgeAction(const FInputActionValue& InputActionValue)
-{
+	SetMaxSpeed(WalkSpeed);
 
 }
 
@@ -502,6 +489,19 @@ void AEPlayer::ReloadAction(const FInputActionValue& InputActionValue)
 	if (CombatComponent == nullptr) return;
 
 	CombatComponent->Reload();
+}
+
+void AEPlayer::SystemMenuAction(const FInputActionValue& InputActionValue)
+{
+	if (InputActionValue.Get<bool>())
+	{
+		if (IsLocallyControlled())
+		{
+			EPlayerController = EPlayerController == nullptr ? Cast<AEPlayerController>(Controller) : EPlayerController.Get();
+
+			EPlayerController->ToggleSystemMenu();
+		}
+	}
 }
 
 bool AEPlayer::IsAiming()

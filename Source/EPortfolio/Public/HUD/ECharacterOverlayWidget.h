@@ -25,10 +25,10 @@ public:
 	TObjectPtr<class UTextBlock> TextBlock_DeathScore;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> TextBlock_AMMO;
+	TObjectPtr<class UTextBlock> TextBlock_Ammo;
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UTextBlock> TextBlock_CarriedAMMO;
+	TObjectPtr<class UTextBlock> TextBlock_CarriedAmmo;
 
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> TextBlock_MatchCountDown;

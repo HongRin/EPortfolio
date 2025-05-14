@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Game/EPlayerState.h"
 #include "Game/EGameState.h"
+#include "EMultiplayerSessionsSubsystem.h"
 #include "GameFramework/PlayerStart.h"
 
 namespace MatchState
@@ -17,6 +18,7 @@ namespace MatchState
 AEGameMode::AEGameMode()
 {
 	bDelayedStart = true;
+	bStartPlayersAsSpectators = true;
 }
 
 void AEGameMode::BeginPlay()
@@ -73,16 +75,25 @@ void AEGameMode::CheckAllClientsReady()
 {
 	ReadyClients++;
 
-	if (ReadyClients == 2)
+	if (UGameInstance* GameInstance = GetGameInstance())
 	{
-		LevelStartingTime = GetWorld()->GetTimeSeconds();
-		bHasInitializedLevelTime = true;
+		UEMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UEMultiplayerSessionsSubsystem>();
+		
+		if (!MultiplayerSessionsSubsystem) return;
+		
+		int32 CurrentPlayer = 4 - MultiplayerSessionsSubsystem->GetPlayerCount();
 
-		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		if (ReadyClients == 2)
 		{
-			if (AEPlayerController* EPlayerController = Cast<AEPlayerController>(*It))
+			LevelStartingTime = GetWorld()->GetTimeSeconds();
+			bHasInitializedLevelTime = true;
+
+			for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 			{
-				EPlayerController->InitializeMatchState();
+				if (AEPlayerController* EPlayerController = Cast<AEPlayerController>(*It))
+				{
+					EPlayerController->InitializeMatchState();
+				}
 			}
 		}
 	}
@@ -124,6 +135,18 @@ void AEGameMode::RequestRespawn(ACharacter* ElimmedCharacter, AController* Elimm
 		UGameplayStatics::GetAllActorsOfClass(this, APlayerStart::StaticClass(), PlayerStarts);
 		int32 Selection = FMath::RandRange(0, PlayerStarts.Num() - 1);
 		RestartPlayerAtPlayerStart(ElimmedController, PlayerStarts[Selection]);
+	}
+}
+
+void AEGameMode::HandleStartingNewPlayer_Implementation(APlayerController* NewPlayer)
+{
+	if (HasMatchStarted())
+	{
+		NewPlayer->StartSpectatingOnly();
+	}
+	else
+	{
+		Super::HandleStartingNewPlayer_Implementation(NewPlayer);
 	}
 }
 

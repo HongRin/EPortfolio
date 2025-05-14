@@ -29,15 +29,18 @@ public:
 	void UpdateHealthHUD(float Health, float MaxHealth);
 	void UpdateKillScoreHUD(float Score);
 	void UpdateDeathScoreHUD(int32 Score);
-	void UpdateAMMOHUD(int32 AMMO);
-	void UpdateCarriedAMMOHUD(int32 AMMO);
+	void UpdateAmmoHUD(int32 Ammo);
+	void UpdateCarriedAmmoHUD(int32 Ammo);
 	void UpdateMatchCountdownHUD(float CountdownTime);
 	void UpdateAnnouncementHUD(float CountdownTime);
 	void UpdateSniperScopeHUD(bool bIsAiming);
 	void OnMatchStateSet(FName State);
 	void InitializeMatchState();
 	void CheckClientReady();
-		
+	
+public :
+	void ToggleSystemMenu();
+
 private :
 	UFUNCTION(Server, Reliable)
 	void ServerCheckClientReady();
@@ -64,6 +67,7 @@ private :
 	void ClientJoinMidgame(FName StateOfMatch, float Warmup, float Match, float Cooldown, float StartingTime);
 
 	void HandleCooldown();
+
 
 private:
 	UPROPERTY()
@@ -93,4 +97,10 @@ private:
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDefeats;
+
+	UPROPERTY(EditDefaultsOnly, Category = "HUD")
+	TSubclassOf<class UUserWidget> SystemMenuWidgetClass;
+
+	UPROPERTY()
+	TObjectPtr<class UESystemMenuWidget> SystemMenu;
 };

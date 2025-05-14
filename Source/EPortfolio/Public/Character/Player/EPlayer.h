@@ -8,6 +8,7 @@
 #include "Type/ECombatState.h"
 #include "EPlayer.generated.h"
 
+
 UCLASS()
 class EPORTFOLIO_API AEPlayer : public AEBaseCharacter
 {
@@ -36,10 +37,8 @@ public :
 	void MulticastHit(FVector2D Direction);
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastDodge();
-
-	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
+
 	void Elim();
 
 private :
@@ -56,7 +55,6 @@ public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
 
 private :
-
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
@@ -71,6 +69,9 @@ private :
 
 	void PollInit();
 
+	void SetMaxSpeed(float MaxSpeed);
+
+
 private:
 	void MoveAction(const struct FInputActionValue& InputActionValue);
 	void LookAction(const struct FInputActionValue& InputActionValue);
@@ -81,8 +82,9 @@ private:
 	void SlowWalkAction(const struct FInputActionValue& InputActionValue);
 	void AimingAction(const struct FInputActionValue& InputActionValue);
 	void FiringAction(const struct FInputActionValue& InputActionValue);
-	void DodgeAction(const struct FInputActionValue& InputActionValue);
 	void ReloadAction(const struct FInputActionValue& InputActionValue);
+	void SystemMenuAction(const struct FInputActionValue& InputActionValue);
+
 
 public :
 	bool IsAiming();
@@ -103,7 +105,6 @@ public :
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	TObjectPtr<class AEWeapon> OverlappingWeapon;
 
-
 	// Component
 private :
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
@@ -112,14 +113,8 @@ private :
 	UPROPERTY(VisibleAnywhere, Category = "Camera")
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<class UWidgetComponent> OverheadWidget;
-
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UECombatComponent> CombatComponent;
-
-	UPROPERTY(Replicated)
-	FVector2D MovementVector;
 
 private :
 	UPROPERTY()
@@ -204,8 +199,8 @@ protected:
 	TObjectPtr<class UInputAction> IAFire;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<class UInputAction> IADodge;
+	TObjectPtr<class UInputAction> IAReload;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Input")
-	TObjectPtr<class UInputAction> IAReload;
+	TObjectPtr<class UInputAction> IASystemMenu;
 };

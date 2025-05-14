@@ -40,9 +40,9 @@ public:
 	virtual void Aimimg(bool bAiming);
 	void Dropped();
 	virtual void OnRep_Owner() override;
-	void SetHUDAMMO();
-	bool IsAMMOEmpty();
-	void AddAMMO(int32 AMMOtoAdd);
+	void SetHUDAmmo();
+	bool IsAmmoEmpty();
+	void AddAmmo(int32 AmmotoAdd);
 	void Reload();
 
 protected:
@@ -59,13 +59,13 @@ protected:
 	void OnAiming(float Output);
 
 	UFUNCTION()
-	void OnRep_AMMO();
+	void OnRep_Ammo();
 
 	void SpawnProjectile(const FVector& SpawnLocation, const FRotator& Direction);
 
 private :
 	void SetAimData(const FEWeaponAimData & InWeaponAimData);
-	void SpendAMMO();
+	void SpendAmmo();
 	void SetBrightness(float Brightness);
 
 public:
@@ -78,7 +78,7 @@ public:
 	FORCEINLINE const float GetAutoFireInterval() const { return WeaponDatas.AutoFireInterval; }
 	FORCEINLINE const bool GetAutomatic() const { return bAutomatic; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
-	FORCEINLINE int32 GetAMMO() const { return AMMO; }
+	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
 
 protected :
@@ -103,10 +103,10 @@ protected :
 	UPROPERTY(EditDefaultsOnly, Category = "WeaponData")
 	bool bAutomatic;
 
-	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_Ammo, Category = "AMMO")
-	int32 AMMO;
+	UPROPERTY(EditDefaultsOnly, ReplicatedUsing = OnRep_Ammo, Category = "Ammo")
+	int32 Ammo;
 
-	UPROPERTY(EditDefaultsOnly, Category = "AMMO")
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
 	int32 MagazineCapacity;
 
 	UPROPERTY()

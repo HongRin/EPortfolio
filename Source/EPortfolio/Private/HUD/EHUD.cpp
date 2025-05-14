@@ -85,21 +85,21 @@ void AEHUD::SetDeathScoreHUD(int32 InScore)
 	}
 }
 
-void AEHUD::SetAMMOHUD(int32 AMMO)
+void AEHUD::SetAmmoHUD(int32 Ammo)
 {
-	if (CharacterOverlay && CharacterOverlay->TextBlock_AMMO)
+	if (CharacterOverlay && CharacterOverlay->TextBlock_Ammo)
 	{
-		FString AMMOText = FString::Printf(TEXT("%d"), AMMO);
-		CharacterOverlay->TextBlock_AMMO->SetText(FText::FromString(AMMOText));
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		CharacterOverlay->TextBlock_Ammo->SetText(FText::FromString(AmmoText));
 	}
 }
 
-void AEHUD::SetCarriedAMMOHUD(int32 AMMO)
+void AEHUD::SetCarriedAmmoHUD(int32 Ammo)
 {
-	if (CharacterOverlay && CharacterOverlay->TextBlock_CarriedAMMO)
+	if (CharacterOverlay && CharacterOverlay->TextBlock_CarriedAmmo)
 	{
-		FString AMMOText = FString::Printf(TEXT("%d"), AMMO);
-		CharacterOverlay->TextBlock_CarriedAMMO->SetText(FText::FromString(AMMOText));
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		CharacterOverlay->TextBlock_CarriedAmmo->SetText(FText::FromString(AmmoText));
 	}
 }
 
@@ -141,8 +141,6 @@ void AEHUD::SetAnnouncementHUD(float Countdown)
 
 void AEHUD::SetSniperScopeWidgetHUD(bool bIsAiming)
 {
-	ELogHelpers::PrintIsValid(SniperScopeWidget, TEXT("SniperScopeWidget"));
-	
 	if (SniperScopeWidget)
 	{
 		SniperScopeWidget->PlayZoomIn(bIsAiming);
@@ -192,6 +190,10 @@ void AEHUD::AddCharacterOverlay()
 	{
 		CharacterOverlay = CreateWidget<UECharacterOverlayWidget>(PlayerController, CharacterOverlayClass);
 		CharacterOverlay->AddToViewport();
+
+		FInputModeGameOnly InputModeData;
+		PlayerController->SetInputMode(InputModeData);
+		PlayerController->SetShowMouseCursor(false);
 	}
 }
 

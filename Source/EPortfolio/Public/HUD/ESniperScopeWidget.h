@@ -12,8 +12,6 @@ class EPORTFOLIO_API UESniperScopeWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-
-public:
 	void PlayZoomIn(bool bIsAimming);
 
 public :

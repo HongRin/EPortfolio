@@ -23,8 +23,8 @@ public :
 	void SetHealthHUD(float InHealthPercent);
 	void SetKillScoreHUD(float InScore);
 	void SetDeathScoreHUD(int32 InScore);
-	void SetAMMOHUD(int32 AMMO);
-	void SetCarriedAMMOHUD(int32 AMMO);
+	void SetAmmoHUD(int32 Ammo);
+	void SetCarriedAmmoHUD(int32 Ammo);
 	void SetMatchCountdownHUD(float MatchCountdown);
 	void SetAnnouncementHUD(float Countdown);
 	void SetSniperScopeWidgetHUD(bool bIsAiming);

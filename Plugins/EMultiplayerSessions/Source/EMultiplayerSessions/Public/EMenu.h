@@ -7,9 +7,18 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "EMenu.generated.h"
 
-/**
- * 
- */
+USTRUCT()
+struct FServerData
+{
+	GENERATED_BODY()
+
+	FString Name;
+	uint16 CurrentPlayers;
+	uint16 MaxPlayers;
+	FString HostUsername;
+};
+
+
 UCLASS()
 class EMULTIPLAYERSESSIONS_API UEMenu : public UUserWidget
 {
@@ -20,15 +29,18 @@ protected:
 	virtual void NativeDestruct() override;
 
 public:
-public:
 	UFUNCTION(BlueprintCallable)
-	void MenuSetup(int32 NumberOfPublicConnections = 4, FString TypeOfMatch = FString(TEXT("FreeForAll")), FString LobbyPath = FString(TEXT("/Game/Levels/Lobby")));
+	void MenuSetup(int32 NumberOfPublicConnections = 4, FString LobbyPath = FString(TEXT("/Game/Levels/Lobby")));
+
+	void SetServerList(TArray<FServerData> ServerNames);
+
+	void SelectIndex(uint32 Index);
 
 protected :
 	UFUNCTION()
 	void OnCreateSession(bool bWasSuccessful);
-	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful);
-	void OnJoinSession(EOnJoinSessionCompleteResult::Type Result);
+	void OnFindSessions(const TArray<FOnlineSessionSearchResult>& SessionResults, bool bWasSuccessful, FName ServerKey);
+	void OnJoinSession(FName SessionName, EOnJoinSessionCompleteResult::Type Result);
 	UFUNCTION()
 	void OnDestroySession(bool bWasSuccessful);
 	UFUNCTION()
@@ -36,23 +48,79 @@ protected :
 
 private :
 	UFUNCTION()
-	void HostButtonClicked();
+	void HostServer();
+
 	UFUNCTION()
-	void JoinButtonClicked();
+	void JoinServer();
+
+	UFUNCTION()
+	void OpenHostMenu();
+
+	UFUNCTION()
+	void OpenJoinMenu();
+
+	UFUNCTION()
+	void OpenMainMenu();
+
+	UFUNCTION()
+	void ServerListResetButtonClicked();
+
 
 private:
 	void MenuTearDown();
+	void UpdateChildren();
+
+public :
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class UUserWidget> ServerRowClass;
 
 private:
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UButton> HostButton;
+	TObjectPtr<class UButton> Button_Host;
+
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<class UButton> JoinButton;
+	TObjectPtr<class UButton> Button_Join;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UButton> Button_CancelJoinMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UButton> Button_ConfirmJoinMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UWidgetSwitcher> MenuSwitcher;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UWidget> MainMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UWidget> JoinMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UWidget> HostMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UEditableTextBox> EditableTextBox_ServerHostName;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UButton> Button_CancelHostMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UButton> Button_ConfirmHostMenu;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UPanelWidget> Panel_ServerList;
+
+	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UButton> Button_ServerListReset;
 
 private :
 	class UEMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
 	int32 NumPublicConnections{ 4 };
-	FString MatchType{ TEXT("FreeForAll") };
 	FString PathToLobby{ TEXT("") };
+
+	TOptional<uint32> SelectedIndex;
+
+
 };
