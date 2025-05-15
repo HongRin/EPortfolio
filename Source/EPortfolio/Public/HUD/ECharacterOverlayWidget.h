@@ -19,6 +19,9 @@ public:
 	TObjectPtr<class UProgressBar> ProgressBar_Health;
 
 	UPROPERTY(meta = (BindWidget))
+	TObjectPtr<class UProgressBar> ProgressBar_Shield;
+
+	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<class UTextBlock> TextBlock_KillScore;
 
 	UPROPERTY(meta = (BindWidget))

@@ -67,6 +67,14 @@ void AEHUD::SetHealthHUD(float InHealthPercent)
 	}
 }
 
+void AEHUD::SetShieldHUD(float InShieldPercent)
+{
+	if (CharacterOverlay && CharacterOverlay->ProgressBar_Shield)
+	{
+		CharacterOverlay->ProgressBar_Shield->SetPercent(InShieldPercent);
+	}
+}
+
 void AEHUD::SetKillScoreHUD(float InScore)
 {
 	if (CharacterOverlay && CharacterOverlay->TextBlock_KillScore)

@@ -33,6 +33,9 @@ public :
 	UFUNCTION()
 	void OnRep_Health();
 
+	UFUNCTION()
+	void OnRep_Shield();
+
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHit(FVector2D Direction);
 
@@ -54,11 +57,13 @@ private :
 public:
 	void SetOverlappingWeapon(class AEWeapon* Weapon);
 
+	void UpdateHealth();
+
+	void UpdateShield();
+
 private :
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-
-	void UpdateHealth();
 
 	void ElimTimerFinished();
 
@@ -94,10 +99,18 @@ public :
 	FVector GetHitTarget() const;
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; };
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; };
+	FORCEINLINE class UECombatComponent* GetCombatComponent() const { return CombatComponent; };
+	FORCEINLINE class UEBuffComponent* GetBuffComponent() const { return BuffComponent; };
 	FORCEINLINE bool IsElimmed() const { return bElimmed; }
 	float GetFootStepVolume() const;
 	FORCEINLINE float GetHealth()    const { return Health; }
 	FORCEINLINE float GetMaxHealth() const { return MaxHealth; }
+	FORCEINLINE float GetShield()    const { return Shield; }
+	FORCEINLINE float GetMaxShield() const { return MaxShield; }
+	FORCEINLINE void SetHealth(float Amount) { Health = Amount; }
+	FORCEINLINE void SetShield(float Amount) { Shield = Amount; }
+
+
 	ECombatState GetCombatState() const;
 
 
@@ -115,6 +128,9 @@ private :
 
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<class UECombatComponent> CombatComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class UEBuffComponent> BuffComponent;
 
 private :
 	UPROPERTY()
@@ -146,6 +162,12 @@ protected :
 
 	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Stats")
 	float Health = 100.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player Stats")
+	float MaxShield = 100.f;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shield, VisibleAnywhere, Category = "Player Stats")
+	float Shield = 0.f;
 
 	UPROPERTY(EditDefaultsOnly)
 	float ElimDelay = 3.f;

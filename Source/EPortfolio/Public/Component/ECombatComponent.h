@@ -43,6 +43,8 @@ public :
 	void PlayHitReactMontage(const FVector2D Direction);
 	void PlayDodgeMontage(const FVector2D Direction);
 	void FinsishedReload();
+	void PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount);
+
 private :
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
@@ -147,8 +149,8 @@ private:
 
 	TMap<EWeaponType, int32> CarriedAmmoMap;
 
-	UPROPERTY(EditDefaultsOnly)
-	int32 StartingAmmo = 1000;
+	UPROPERTY(EditDefaultsOnly, Category = "Ammo")
+	TMap<EWeaponType, int32> MaxCarriedAmmoMap;
 
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState;

@@ -13,20 +13,39 @@ class EPORTFOLIO_API AEPickupActor : public AActor
 	
 public:	
 	AEPickupActor();
+	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 
 protected:
 	virtual void BeginPlay() override;
 	
+	UFUNCTION()
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-private:
+private :
+	void OverlapTimerFinished();
+
+
+protected :
 	UPROPERTY(EditAnywhere)
-	class USphereComponent* OverlapSphere;
+	float BaseTurnRate = 45.f;
+
+protected :
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class USphereComponent> OverlapSphere;
 
 	UPROPERTY(EditAnywhere)
-	class USoundCue* PickupSound;
+	TObjectPtr<class USoundCue> PickupSound;
 
 	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent* Mesh;
+	TObjectPtr<class UStaticMeshComponent> Mesh;
 
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<class UNiagaraSystem> PickupEffect;
+
+	TObjectPtr<class AEPlayer> Player;
+
+
+	FTimerHandle OverlapTimer;
+	float OverlapTime = 0.25f;
 };

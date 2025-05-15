@@ -27,6 +27,7 @@ public :
 
 public:
 	void UpdateHealthHUD(float Health, float MaxHealth);
+	void UpdateShieldHUD(float Shield, float MaxShield);
 	void UpdateKillScoreHUD(float Score);
 	void UpdateDeathScoreHUD(int32 Score);
 	void UpdateAmmoHUD(int32 Ammo);
@@ -69,6 +70,7 @@ private :
 	void HandleCooldown();
 
 
+
 private:
 	UPROPERTY()
 	TObjectPtr<class AEHUD> PlayerHUD;
@@ -91,12 +93,13 @@ private:
 	
 	UPROPERTY()
 	TObjectPtr<class UECharacterOverlayWidget> CharacterOverlay;
-	bool bInitializeCharacterOverlay = false;
 
 	float HUDHealth;
 	float HUDMaxHealth;
 	float HUDScore;
 	int32 HUDDefeats;
+	float HUDShield;
+	float HUDMaxShield;
 
 	UPROPERTY(EditDefaultsOnly, Category = "HUD")
 	TSubclassOf<class UUserWidget> SystemMenuWidgetClass;

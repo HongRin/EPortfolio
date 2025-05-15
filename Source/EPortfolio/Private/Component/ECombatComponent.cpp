@@ -402,9 +402,9 @@ void UECombatComponent::ServerReload_Implementation()
 
 void UECombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAmmoMap.Emplace(EWeaponType::WT_Rifle, StartingAmmo);
-	CarriedAmmoMap.Emplace(EWeaponType::WT_Shotgun, StartingAmmo);
-	CarriedAmmoMap.Emplace(EWeaponType::WT_Rifle, StartingAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Rifle  , 150);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Shotgun, 40);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Sniper , 60);
 }
 
 void UECombatComponent::ReloadHandle()
@@ -442,6 +442,19 @@ void UECombatComponent::FinsishedReload()
 	if (bFiring)
 	{
 		OnFiring();
+	}
+}
+
+void UECombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
+{
+	if (CarriedAmmoMap.Contains(WeaponType))
+	{
+		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0, MaxCarriedAmmoMap[WeaponType]);
+		UpdateAmmoValues();
+	}
+	if (EquippedWeapon && EquippedWeapon->IsAmmoEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
+	{
+		Reload();
 	}
 }
 

@@ -75,15 +75,15 @@ void AEGameMode::CheckAllClientsReady()
 {
 	ReadyClients++;
 
-	if (UGameInstance* GameInstance = GetGameInstance())
-	{
-		UEMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UEMultiplayerSessionsSubsystem>();
-		
-		if (!MultiplayerSessionsSubsystem) return;
-		
-		int32 CurrentPlayer = 4 - MultiplayerSessionsSubsystem->GetPlayerCount();
+	//if (UGameInstance* GameInstance = GetGameInstance())
+	//{
+		//UEMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UEMultiplayerSessionsSubsystem>();
+		//
+		//if (!MultiplayerSessionsSubsystem) return;
+		//
+		//int32 CurrentPlayer = 4 - MultiplayerSessionsSubsystem->GetPlayerCount();
 
-		if (ReadyClients == 2)
+		if (ReadyClients == 3)
 		{
 			LevelStartingTime = GetWorld()->GetTimeSeconds();
 			bHasInitializedLevelTime = true;
@@ -96,7 +96,7 @@ void AEGameMode::CheckAllClientsReady()
 				}
 			}
 		}
-	}
+	//}
 }
 
 void AEGameMode::PlayerEliminated(AEPlayer* ElimmedCharacter, AEPlayerController* VictimController, AEPlayerController* AttackerController)

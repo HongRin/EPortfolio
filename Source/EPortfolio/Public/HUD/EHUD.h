@@ -21,6 +21,7 @@ protected :
 
 public :
 	void SetHealthHUD(float InHealthPercent);
+	void SetShieldHUD(float InShieldPercent);
 	void SetKillScoreHUD(float InScore);
 	void SetDeathScoreHUD(int32 InScore);
 	void SetAmmoHUD(int32 Ammo);

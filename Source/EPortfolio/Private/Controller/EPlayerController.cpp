@@ -83,13 +83,29 @@ void AEPlayerController::UpdateHealthHUD(float InHealth, float InMaxHealth)
 
 	if (PlayerHUD)
 	{
+		float Percent = InHealth == 0 ? 0 : InHealth / InMaxHealth;
 		PlayerHUD->SetHealthHUD(InHealth / InMaxHealth);
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
 		HUDHealth    = InHealth;
 		HUDMaxHealth = InMaxHealth;
+	}
+}
+
+void AEPlayerController::UpdateShieldHUD(float Shield, float MaxShield)
+{
+	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
+
+	if (PlayerHUD)
+	{
+		float Percent = Shield == 0 ? 0 : Shield / MaxShield;
+		PlayerHUD->SetShieldHUD(Percent);
+	}
+	else
+	{
+		HUDShield = Shield;
+		HUDMaxShield = MaxShield;
 	}
 }
 
@@ -103,7 +119,6 @@ void AEPlayerController::UpdateKillScoreHUD(float Score)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
 		HUDScore = Score;
 	}
 }
@@ -119,7 +134,6 @@ void AEPlayerController::UpdateDeathScoreHUD(int32 Score)
 	}
 	else
 	{
-		bInitializeCharacterOverlay = true;
 		HUDDefeats = Score;
 	}
 }
@@ -280,6 +294,7 @@ void AEPlayerController::PollInit()
 				UpdateHealthHUD(HUDHealth, HUDMaxHealth);
 				UpdateKillScoreHUD(HUDScore);
 				UpdateDeathScoreHUD(HUDDefeats);
+				UpdateShieldHUD(HUDShield, HUDMaxShield);
 			}
 		}
 	}

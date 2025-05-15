@@ -20,6 +20,7 @@
 #include "HUD/EOverheadWidget.h"
 #include "Weapon/EWeapon.h"
 #include "Component/ECombatComponent.h"
+#include "Component/EBuffComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Controller/EPlayerController.h"
@@ -51,6 +52,11 @@ AEPlayer::AEPlayer()
 	{
 		CombatComponent = CreateDefaultSubobject<UECombatComponent>(TEXT("CombatComponent"));
 		CombatComponent->SetIsReplicated(true);
+	}
+
+	{
+		BuffComponent = CreateDefaultSubobject<UEBuffComponent>(TEXT("BuffComponent"));
+		BuffComponent->SetIsReplicated(true);
 	}
 
 	{
@@ -108,6 +114,7 @@ void AEPlayer::BeginPlay()
 	}
 
 	UpdateHealth();
+	UpdateShield();
 
 }
 
@@ -160,14 +167,20 @@ void AEPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetime
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME_CONDITION(AEPlayer, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(AEPlayer, Health);
+	DOREPLIFETIME(AEPlayer, Shield);
 }
 
 void AEPlayer::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
+
 	if (CombatComponent)
 	{
 		CombatComponent->Player = this;
+	}
+	if (BuffComponent)
+	{
+		BuffComponent->Player = this;
 	}
 }
 
@@ -186,6 +199,11 @@ void AEPlayer::OnRep_OverlappingWeapon(AEWeapon* LastWeapon)
 void AEPlayer::OnRep_Health()
 {
 	UpdateHealth();
+}
+
+void AEPlayer::OnRep_Shield()
+{
+	UpdateShield();
 }
 
 
@@ -289,8 +307,34 @@ void AEPlayer::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageTy
 {
 	if (bElimmed) return;
 
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
-	UpdateHealth();
+	float DamageToHealth = Damage;
+
+	if (Shield > 0.f)
+	{
+		if (Shield >= Damage)
+		{
+			Shield = FMath::Clamp(Shield - Damage, 0.f, MaxShield);
+			DamageToHealth = 0.f;
+		}
+		else
+		{
+			DamageToHealth = FMath::Clamp(DamageToHealth - Shield, 0.f, Damage);
+			Shield = 0.f;
+		}
+	}
+
+	if (Shield >= 0)
+	{
+		UpdateShield();
+	}
+
+	if (DamageToHealth > 0)
+	{
+		Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+		UpdateHealth();
+	}
+
+	
 
 	if (Health == 0.f)
 	{
@@ -310,6 +354,15 @@ void AEPlayer::UpdateHealth()
 	if (EPlayerController)
 	{
 		EPlayerController->UpdateHealthHUD(Health, MaxHealth);
+	}
+}
+
+void AEPlayer::UpdateShield()
+{
+	EPlayerController = EPlayerController == nullptr ? Cast<AEPlayerController>(Controller) : EPlayerController.Get();
+	if (EPlayerController)
+	{
+		EPlayerController->UpdateShieldHUD(Shield, MaxShield);
 	}
 }
 

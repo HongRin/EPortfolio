@@ -9,7 +9,7 @@
 
 
 USTRUCT(BlueprintType)
-struct FPickupMaterialData
+struct FWeaponMaterialData
 {
 	GENERATED_BODY()
 public:
@@ -122,7 +122,7 @@ protected :
 
 
 	UPROPERTY(EditAnywhere, Category = "Pickup")
-	TArray<FPickupMaterialData> PickupMaterialInstances;
+	TArray<FWeaponMaterialData> PickupMaterialInstances;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UMaterialInstanceDynamic>> DynamicPickupMaterialInstances;

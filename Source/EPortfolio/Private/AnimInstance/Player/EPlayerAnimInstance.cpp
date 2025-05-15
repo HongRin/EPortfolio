@@ -52,7 +52,7 @@ void UEPlayerAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
 		if (Player->GetAnimLayer() != ItemAnimLayer)
 		{
 			ItemAnimLayer = Player->GetAnimLayer();
-
+		
 			AsyncTask(ENamedThreads::GameThread, [this, DeltaSeconds]()
 				{
 					if (GetOwningComponent())
