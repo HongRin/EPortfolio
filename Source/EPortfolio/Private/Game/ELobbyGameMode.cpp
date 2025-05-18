@@ -5,6 +5,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "Game/ELobbyGameState.h"
 #include "Controller/EPlayerController.h"
+#include "EMultiplayerSessionsSubsystem.h"
 
 void AELobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -13,8 +14,16 @@ void AELobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	if (AELobbyGameState* LobbyGameState = GetGameState<AELobbyGameState>())
 	{
 		LobbyGameState->UpdatePlayerCount(1);
-	}
 
+		if (UGameInstance* GameInstance = GetGameInstance())
+		{
+			UEMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem = GameInstance->GetSubsystem<UEMultiplayerSessionsSubsystem>();
+
+			if (!MultiplayerSessionsSubsystem) return;
+
+			MultiplayerSessionsSubsystem->SetPlayerCount(LobbyGameState->GetCurrentPlayers());
+		}
+	}
 }
 
 void AELobbyGameMode::Logout(AController* Exiting)

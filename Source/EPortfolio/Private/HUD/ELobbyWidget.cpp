@@ -70,8 +70,6 @@ void UELobbyWidget::OnPlayerCountChanged(int32 NewCount)
 {
 	FString Text;
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.f, FColor::Green, FString(TEXT("OnPlayerCountChanged")));
-
 	if (UWorld* World = GetWorld())
 	{
 		PlayerController = PlayerController == nullptr ? World->GetFirstPlayerController() : PlayerController;
@@ -90,7 +88,7 @@ void UELobbyWidget::OnPlayerCountChanged(int32 NewCount)
 			}
 		}
 		
-		Text = FString::Printf(TEXT("Players : %d / %d"), NewCount, 4);
+		Text = FString::Printf(TEXT("Players : %d / %d"), NewCount, 8);
 		TextBlock_PlayerCount->SetText(FText::FromString(FString(Text)));
 	}
 

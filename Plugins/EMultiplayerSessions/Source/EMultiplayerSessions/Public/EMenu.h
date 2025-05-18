@@ -117,10 +117,8 @@ private:
 private :
 	class UEMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
-	int32 NumPublicConnections{ 4 };
+	int32 NumPublicConnections{ 8 };
 	FString PathToLobby{ TEXT("") };
 
 	TOptional<uint32> SelectedIndex;
-
-
 };

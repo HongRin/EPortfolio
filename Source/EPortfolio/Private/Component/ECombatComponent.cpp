@@ -169,7 +169,7 @@ void UECombatComponent::SetAiming(bool bIsAiming)
 		else
 		{
 			CrosshairAimFactor = 0.f;
-			MouseSensitivity = 1.f;
+			MouseSensitivity = 0.8f;
 		}
 	}
 }
@@ -402,9 +402,9 @@ void UECombatComponent::ServerReload_Implementation()
 
 void UECombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAmmoMap.Emplace(EWeaponType::WT_Rifle  , 150);
-	CarriedAmmoMap.Emplace(EWeaponType::WT_Shotgun, 40);
-	CarriedAmmoMap.Emplace(EWeaponType::WT_Sniper , 60);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Rifle  , 40);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Shotgun, 5);
+	CarriedAmmoMap.Emplace(EWeaponType::WT_Sniper , 10);
 }
 
 void UECombatComponent::ReloadHandle()
@@ -450,11 +450,21 @@ void UECombatComponent::PickupAmmo(EWeaponType WeaponType, int32 AmmoAmount)
 	if (CarriedAmmoMap.Contains(WeaponType))
 	{
 		CarriedAmmoMap[WeaponType] = FMath::Clamp(CarriedAmmoMap[WeaponType] + AmmoAmount, 0, MaxCarriedAmmoMap[WeaponType]);
-		UpdateAmmoValues();
-	}
-	if (EquippedWeapon && EquippedWeapon->IsAmmoEmpty() && EquippedWeapon->GetWeaponType() == WeaponType)
-	{
-		Reload();
+
+		if (EquippedWeapon && EquippedWeapon->GetWeaponType() == WeaponType)
+		{
+			CarriedAmmo = CarriedAmmoMap[WeaponType];
+			Controller = Controller == nullptr ? Cast<AEPlayerController>(Player->Controller) : Controller.Get();
+			if (Controller)
+			{
+				Controller->UpdateCarriedAmmoHUD(CarriedAmmo);
+			}
+
+			if (EquippedWeapon->IsAmmoEmpty())
+			{
+				Reload();
+			}
+		}
 	}
 }
 
@@ -496,9 +506,9 @@ void UECombatComponent::SetAimMouseSensitivity()
 {
 	switch (EquippedWeapon->GetWeaponType())
 	{
-		case EWeaponType::WT_Rifle:    MouseSensitivity = 0.5f; break;
-		case EWeaponType::WT_Shotgun:  MouseSensitivity = 0.7f; break;
-		case EWeaponType::WT_Sniper:   MouseSensitivity = 0.1f; break;
+		case EWeaponType::WT_Rifle:    MouseSensitivity = 0.35f; break;
+		case EWeaponType::WT_Shotgun:  MouseSensitivity = 0.6f; break;
+		case EWeaponType::WT_Sniper:   MouseSensitivity = 0.25f; break;
 	}
 }
 

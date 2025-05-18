@@ -31,8 +31,10 @@ public :
 	void DestroySession();
 	void StartSession();
 
+
 	bool IsValidSessionInterface();
 
+	void SetPlayerCount(int32 PlayerCount);
 	int32 GetPlayerCount();
 
 protected:

@@ -8,6 +8,8 @@
 
 const static FName SESSION_NAME = TEXT("Game");
 const static FName SERVER_NAME_SETTINGS_KEY = TEXT("ServerName");
+const static FName CURRENT_PLAYER_KEY = TEXT("CurrentPlayer");
+
 
 UEMultiplayerSessionsSubsystem::UEMultiplayerSessionsSubsystem() :
 	CreateSessionCompleteDelegate ( FOnCreateSessionCompleteDelegate::CreateUObject(this, &ThisClass::OnCreateSessionComplete )),
@@ -51,6 +53,7 @@ void UEMultiplayerSessionsSubsystem::CreateSession(int32 NumPublicConnections, F
 		LastSessionSettings->bUseLobbiesIfAvailable = true;
 		LastSessionSettings->BuildUniqueId          = 1;
 		LastSessionSettings->Set(SERVER_NAME_SETTINGS_KEY, DesiredServerName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		LastSessionSettings->Set(CURRENT_PLAYER_KEY, 1, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 	}
 
 	const ULocalPlayer* LocalPlayer = GetWorld()->GetFirstLocalPlayerFromController();
@@ -135,6 +138,23 @@ bool UEMultiplayerSessionsSubsystem::IsValidSessionInterface()
 		}
 	}
 	return SessionInterface.IsValid();
+}
+
+void UEMultiplayerSessionsSubsystem::SetPlayerCount(int32 PlayerCount)
+{
+	if (!IsValidSessionInterface())
+	{
+		return;
+	}
+
+	FNamedOnlineSession* Session = SessionInterface->GetNamedSession(SESSION_NAME);
+
+
+	if (Session)
+	{
+		Session->SessionSettings.Set(CURRENT_PLAYER_KEY, PlayerCount, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+		SessionInterface->UpdateSession(SESSION_NAME, Session->SessionSettings);
+	}
 }
 
 int32 UEMultiplayerSessionsSubsystem::GetPlayerCount()

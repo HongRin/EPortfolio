@@ -155,5 +155,5 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
 	ECombatState CombatState;
 
-	float MouseSensitivity = 1.0f;
+	float MouseSensitivity = 0.8f;
 };

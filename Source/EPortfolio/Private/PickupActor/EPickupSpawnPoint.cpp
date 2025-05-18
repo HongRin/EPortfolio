@@ -27,7 +27,16 @@ void AEPickupSpawnPoint::BeginPlay()
 	);
 
 	StartSpawnTimer((AActor*)nullptr);
-	
+
+	if (!HasAuthority())
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			SpawnLoadingEffect,
+			GetActorLocation() + FVector(0, 0, 20),
+			GetActorRotation()
+		);
+	}
 }
 
 void AEPickupSpawnPoint::SpawnPickupActor()
@@ -64,14 +73,14 @@ void AEPickupSpawnPoint::StartSpawnTimer(AActor* DestroyedActor)
 {
 	if (HasAuthority())
 	{
-		MulticastPlayEffect();
-
 		GetWorldTimerManager().SetTimer(
 			SpawnTimer,
 			this,
 			&AEPickupSpawnPoint::SpawnTimerFinished,
 			SpawnDelay
 		);
+
+		MulticastPlayEffect();
 	}
 }
 

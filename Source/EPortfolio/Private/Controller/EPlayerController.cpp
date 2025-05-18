@@ -281,7 +281,6 @@ void AEPlayerController::OnRep_MatchState()
 	}
 }
 
-
 void AEPlayerController::PollInit()
 {
 	if (CharacterOverlay == nullptr)
@@ -321,6 +320,7 @@ void AEPlayerController::HandleMatchHasStarted()
 		}
 	}
 }
+
 void AEPlayerController::HandleCooldown()
 {
 	PlayerHUD = PlayerHUD == nullptr ? Cast<AEHUD>(GetHUD()) : PlayerHUD.Get();
@@ -356,14 +356,20 @@ void AEPlayerController::HandleCooldown()
 				}
 				else if (TopPlayers.Num() == 1)
 				{
-					InfoTextString = FString::Printf(TEXT("%s is winner"), *TopPlayers[0]->GetPlayerName());
+					if (TopPlayers[0])
+					{
+						InfoTextString = FString::Printf(TEXT("%s is winner"), *TopPlayers[0]->GetPlayerName());
+					}
 				}
 				else if (TopPlayers.Num() > 1)
 				{
 					InfoTextString = FString("Players tied for the win\n");
 					for (auto TiedPlayer : TopPlayers)
 					{
-						InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+						if (TiedPlayer)
+						{
+							InfoTextString.Append(FString::Printf(TEXT("%s\n"), *TiedPlayer->GetPlayerName()));
+						}
 					}
 				}
 				PlayerHUD->GetAnnouncement()->TextBlock_Info->SetText(FText::FromString(InfoTextString));
@@ -376,11 +382,11 @@ void AEPlayerController::ServerCheckMatchState_Implementation()
 {
 	if (AEGameMode* GameMode = Cast<AEGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
-		WarmupTime = GameMode->WarmupTime;
-		MatchTime = GameMode->MatchTime;
-		CooldownTime = GameMode->CooldownTime;
+		WarmupTime        = GameMode->WarmupTime;
+		MatchTime         = GameMode->MatchTime;
+		CooldownTime      = GameMode->CooldownTime;
 		LevelStartingTime = GameMode->LevelStartingTime;
-		MatchState = GameMode->GetMatchState();
+		MatchState        = GameMode->GetMatchState();
 
  		ClientJoinMidgame(MatchState, WarmupTime, MatchTime, CooldownTime, LevelStartingTime);
 	}
